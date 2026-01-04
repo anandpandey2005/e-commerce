@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const NotificationSchema = new mongoose.Schema(
+const NotificationSchema = new Schema(
   {
     recipient: {
       type: mongoose.Schema.Types.ObjectId,
@@ -18,7 +18,10 @@ const NotificationSchema = new mongoose.Schema(
 
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
-    expiresAt: { type: Date },
+    expiresAt: {
+      type: Date,
+      default: () => Date.now() + 1296000 * 1000,
+    },
   },
   { timestamps: true }
 );
