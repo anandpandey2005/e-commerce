@@ -1,0 +1,23 @@
+PACKAGES THAT ARE BEING USED IN THIS APP ARE LISTED BELOW : 
+
+-COPRESSION
+-HELMET
+-MORGAN 
+-EPXRESS-RATE-LIMIT
+-COOKIE-PARSER
+-JSON WEB TOKEN
+-BCRYPT
+-RAZORPAY
+-SLUGIFY
+
+
+API RESPONSE STRUCTURE
+
+        SUCCESS RESPONSE                                        ERROR RESPONSE
+- RES = isntance/object                                      - RES = isntance / object                                          
+- STATUS CODE = number                                       - STATUS_CODE = number
+- SUCCESS = boolean                                          - SUCCESS = boolean
+- STATUS_CODE = number                                       - MESSAGE = string
+- MESSAGE = string                                           - DATA = NULL
+- DATA = json / object                                       - ERROR = []
+- TIMESTAMP = string / dateObject                            - ISOPERATIONAL = boolean 
