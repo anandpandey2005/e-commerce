@@ -1,4 +1,13 @@
 import mongoose from "mongoose";
+import {
+  User,
+  Order,
+  Coupon,
+  Notification,
+  Product,
+  Category,
+  Cart,
+} from "../models/index.model.js";
 
 const databaseConnection = async () => {
   try {
