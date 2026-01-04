@@ -10,6 +10,7 @@ const CuponSchema = new Schema(
     },
     title: { type: String, required: true },
     message: { type: String, required: true },
+    code: { type: String, required: true },
     expiresAt: {
       type: Date,
       default: () => Date.now() + 1296000 * 1000,
