@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 import {
   User,
   Order,
-  Coupon,
+  Cupon,
   Notification,
   Product,
   Category,
   Cart,
-} from "../models/index.model.js";
+} from "../../models/index.model.js";
 
 const databaseConnection = async () => {
   try {

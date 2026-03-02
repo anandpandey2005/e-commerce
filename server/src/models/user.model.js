@@ -1,18 +1,35 @@
 import mongoose, { Schema } from "mongoose";
 
-const addressSchema = new Schema(
-  {
-    line1: { type: String, required: true, trim: true },
-    line2: { type: String, trim: true },
-    line3: { type: String, trim: true },
-    state: { type: String, required: true },
-    pinCode: { type: String, required: true },
+const addressSchema = new Schema({
+  houseNumber: { type: String, required: true, trim: true },
+  buildingName: { type: String, trim: true },
+  streetAddress: { type: String, required: true, trim: true },
+  landmark: { type: String, required: true, trim: true },
+  city: { type: String, required: true, trim: true },
+  state: { type: String, required: true },
+  pinCode: {
+    type: String,
+    required: true,
+    match: [/^[0-9]{6}$/, "Please fill a valid 6-digit pincode"],
   },
-  { timestamps: true }
-);
+  country: { type: String, default: "India" },
+  addressType: {
+    type: String,
+    enum: ["Home", "Work", "Other"],
+    default: "Home",
+  },
+});
 
 const UserSchema = new Schema(
   {
+    _id: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: true,
+      unique: true,
+      index: true,
+    },
     name: {
       first: {
         type: String,
@@ -26,24 +43,22 @@ const UserSchema = new Schema(
         trim: true,
       },
     },
-    email: {
-      type: String,
-      required: [true, "Email required"],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
     phone: {
-      type: String,
-      required: [true, "Phone required"],
-      unique: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      select: false,
+      number: {
+        type: String,
+        required: true,
+        trim: true,
+        match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit mobile number"],
+      },
+      countryCode: {
+        type: String,
+        default: "+91",
+        required: true,
+      },
+      isVerified: {
+        type: Boolean,
+        default: false,
+      },
     },
 
     address: [addressSchema],
@@ -65,12 +80,19 @@ const UserSchema = new Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    otp: {},
+    expiryOtp: {},
+    isLoggedin: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+    _id: false,
+  },
 );
 
 export const User = mongoose.model("User", UserSchema);
