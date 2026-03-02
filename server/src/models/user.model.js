@@ -53,7 +53,6 @@ const UserSchema = new Schema(
       countryCode: {
         type: String,
         default: "+91",
-        required: true,
       },
       isVerified: {
         type: Boolean,

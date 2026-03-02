@@ -5,18 +5,17 @@ const SpecificationSchema = new Schema(
     key: { type: String, required: true },
     value: { type: String, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ProductSchema = new Schema(
   {
     image: [{ type: String, trim: true, default: null }],
-    name: {
+    _id: {
       type: String,
       lowercase: true,
       trim: true,
-      unique: true,
-      required: [true, "Name is required"],
+      required: [true, "Product name is required"],
     },
     model: {
       type: String,
@@ -25,6 +24,10 @@ const ProductSchema = new Schema(
       unique: true,
       required: [true, "Model is required"],
     },
+
+    oldPrice: { type: Number, required: true },
+    newPrice: { type: Number, required: true },
+
     description: { type: String, lowercase: true, trim: true },
 
     specifications: [
@@ -33,8 +36,24 @@ const ProductSchema = new Schema(
         details: [SpecificationSchema],
       },
     ],
+    selled: {
+      type: Number,
+      default: null,
+    },
+    brousher: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    gallery: [
+      {
+        type: String,
+        trim: true,
+        default: null,
+      },
+    ],
   },
-  { timestamps: true }
+  { timestamps: true, _id: false },
 );
 
 export const Product = mongoose.model("Product", ProductSchema);

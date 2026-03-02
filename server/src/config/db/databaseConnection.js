@@ -6,7 +6,6 @@ import {
   Notification,
   Product,
   Category,
-  Cart,
 } from "../../models/index.model.js";
 
 const databaseConnection = async () => {

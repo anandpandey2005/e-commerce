@@ -4,6 +4,5 @@ import { Cupon } from "./cupon.model.js";
 import { Notification } from "./notification.model.js";
 import { Product } from "./product.model.js";
 import { Category } from "./category.model.js";
-import { Cart } from "./cart.model.js";
 
-export { User, Order, Cupon, Notification, Product, Category, Cart };
+export { User, Order, Cupon, Notification, Product, Category };
