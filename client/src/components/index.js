@@ -4,4 +4,6 @@ export { default as Header } from "./Header.jsx";
 export { default as HeroSection } from "./HeroSection.jsx";
 export { default as MapEmbed } from "./Mapembed.jsx";
 export { default as CategoryDisplay } from "./CategoryDisplay.jsx";
-export { default as Awards_Recognition } from "./Awards_Recogniation.jsx"
+export { default as Awards_Recognition } from "./Awards_Recogniation.jsx";
+export { default as LeftPanel } from "./admin/LeftPanel.jsx";
+export { default as RightPanel } from "./admin/RightPanel.jsx";
