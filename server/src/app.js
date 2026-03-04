@@ -4,8 +4,7 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { adminRoutes } from "./routes/adminRoutes.js";
-import { userRoutes } from "./routes/userRoutes.js";
+import publicRoutes from "./routes/public.routes.js";
 
 const app = express();
 
@@ -17,7 +16,7 @@ app.use(
     origin: process.env.CORS_ORIGIN || "*",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
-  })
+  }),
 );
 
 const limiter = rateLimit({
@@ -32,7 +31,7 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use("/api/v1/admin", adminRoutes);
-app.use("/api/v1/user", userRoutes);
+
+app.use("/api/v1/", publicRoutes);
 
 export { app };

@@ -1,0 +1,27 @@
+src/
+└── pages/
+    └── admin/
+        ├── Dashboard/          # High-level stats (Sales today, active orders)
+        ├── Inventory/          # Table view of all products (Search/Filter)
+        │   ├── AddProduct/     # Form to create a new product
+        │   └── EditProduct/    # Dynamic page to update existing product
+        ├── Orders/             # List of customer purchases
+        │   └── OrderDetails/   # Status updates (Pending -> Shipped -> Delivered)
+        ├── Customers/          # List of registered users and their history
+        ├── Coupons/            # Create and manage discount codes
+        └── Settings/           # Change site name, logo, or owner password
+
+
+src/
+└── components/
+    └── features/
+        └── Admin/
+            ├── Charts/         # Sales graphs (e.g., Line charts using Chart.js)
+            ├── Forms/          # Reusable logic for product uploads
+            │   ├── ImageUploader/  # Drag-and-drop for product photos
+            │   └── CategorySelect/ # Dynamic dropdown for product types
+            ├── Tables/         # Specialized tables with "Edit" and "Delete" buttons
+            │   ├── ProductTable/
+            │   └── OrderTable/
+            ├── StatusBadge/    # Small colored tags (e.g., Green for "Paid")
+            └── Sidebar/        # Dedicated Admin-only navigation

@@ -1,0 +1,49 @@
+src/
+└── pages/
+    ├── public/                # Accessible to everyone
+    │   ├── Home/              # Hero section, featured products
+    │   ├── Shop/              # Main product listing/grid
+    │   ├── ProductDetail/     # Single product view (dynamic)
+    │   └── About/             # Owner's story/Brand info
+    │
+    ├── checkout/              # The conversion funnel
+    │   ├── Cart/              # Shopping bag summary
+    │   ├── Shipping/          # Address and shipping methods
+    │   └── Payment/           # Payment processing & Success pages
+    │
+    ├── auth/                  # Identity management
+    │   ├── Login/
+    │   ├── Register/
+    │   └── ForgotPassword/
+    │
+    ├── account/               # Protected (User's private area)
+    │   ├── Dashboard/         # Overview of recent activity
+    │   ├── OrderHistory/      # Past purchases
+    │   └── ProfileSettings/   # Update address/email
+    │
+    └── error/                 # Fallback pages
+        ├── NotFound/          # 404 Page
+        └── Maintenance/       # If site is temporarily down
+
+
+
+
+src/
+└── components/
+    ├── common/                # Atomic, reusable UI pieces (Buttons, Inputs, Spinners)
+    │   ├── Button/
+    │   │   ├── Button.jsx
+    │   │   ├── Button.styles.css
+    │   │   └── index.js       # Simplifies imports
+    │   └── Input/
+    ├── layout/                # Page wrappers and structural elements
+    │   ├── Navbar/
+    │   ├── Sidebar/
+    │   └── Footer/
+    ├── features/              # Complex, business-logic-specific components
+    │   ├── Auth/              # Login/Signup forms
+    │   ├── Dashboard/         # Charts, Stat cards
+    │   └── UserProfile/
+    └── shared/                # Mid-level components used across different features
+        ├── Modal/
+        └── DataTableCell/
