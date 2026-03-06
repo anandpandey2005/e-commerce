@@ -30,6 +30,14 @@ const UserSchema = new Schema(
       unique: true,
       index: true,
     },
+    gmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: true,
+      unique: true,
+      index: true,
+    },
     name: {
       first: {
         type: String,
@@ -94,4 +102,10 @@ const UserSchema = new Schema(
   },
 );
 
+UserSchema.pre("save", function (next) {
+  if (this.isNew && this.gmail) {
+    this._id = this.gmail.toLowerCase().replace(/[@.]/g, "-");
+  }
+  next();
+});
 export const User = mongoose.model("User", UserSchema);
