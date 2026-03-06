@@ -1,5 +1,5 @@
 class apiResponse {
-  constructor(statusCode, message = "Success", data) {
+  constructor(statusCode, data, message) {
     this.statusCode = statusCode;
     this.success = true;
     this.message = message;
@@ -7,7 +7,7 @@ class apiResponse {
     this.timeStamp = new Date().toISOString();
   }
 
-  static success(res, statusCode, message, data) {
+  static success(res, statusCode, data = null, message = "success") {
     return res
       .status(statusCode)
       .json(new apiResponse(statusCode, data, message));
