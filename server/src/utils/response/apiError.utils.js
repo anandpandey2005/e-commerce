@@ -3,7 +3,7 @@ class apiError extends Error {
     statusCode,
     message = "Something went wrong",
     errors = [],
-    stack = ""
+    stack = "",
   ) {
     super(message);
     this.statusCode = statusCode;
@@ -20,7 +20,12 @@ class apiError extends Error {
     }
   }
 
-  static errorResponse(res, statusCode, message, errors = []) {
+  static errorResponse(
+    res,
+    statusCode = 500,
+    message = "internal server error",
+    errors = [],
+  ) {
     const errorInstance = new apiError(statusCode, message, errors);
 
     return res.status(statusCode).json({

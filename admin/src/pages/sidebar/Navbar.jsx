@@ -1,5 +1,5 @@
-import React, { Profiler, useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -9,9 +9,7 @@ import {
   LogOut,
   ChevronRight,
   ChevronLeft,
-  Menu,
   Users,
-  Users2,
   IdCard,
 } from "lucide-react";
 
