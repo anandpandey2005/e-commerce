@@ -22,7 +22,7 @@ const matchesAccept = (file, accept) => {
       const prefix = rule.replace("/*", "/");
       return fileType.startsWith(prefix);
     }
-
+ 
     if (rule.startsWith(".")) {
       return fileName.endsWith(rule);
     }
@@ -105,7 +105,9 @@ export default function FileDropInput({
         ) : (
           <p>Drag and drop file here, or click to choose</p>
         )}
-        {helperText ? <p className="mt-1 text-xs text-gray-500">{helperText}</p> : null}
+        {helperText ? (
+          <p className="mt-1 text-xs text-gray-500">{helperText}</p>
+        ) : null}
         {!file && existingUrl ? (
           <a
             href={existingUrl}
