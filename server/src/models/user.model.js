@@ -1,35 +1,38 @@
 import mongoose, { Schema } from "mongoose";
 
-const addressSchema = new Schema({
-  houseNumber: { type: String, required: true, trim: true },
-  buildingName: { type: String, trim: true },
-  streetAddress: { type: String, required: true, trim: true },
-  landmark: { type: String, required: true, trim: true },
-  city: { type: String, required: true, trim: true },
+const Address_Schema = new Schema({
+  line_1: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  line_2: {
+    type: String,
+    default: null,
+    trim: true,
+  },
+  landmark: { type: String, default: null, trim: true },
   state: { type: String, required: true },
-  pinCode: {
+  post_office: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  pin_code: {
     type: String,
     required: true,
     match: [/^[0-9]{6}$/, "Please fill a valid 6-digit pincode"],
   },
-  country: { type: String, default: "India" },
-  addressType: {
+  country: { type: String, default: null },
+  address_type: {
     type: String,
     enum: ["Home", "Work", "Other"],
     default: "Home",
   },
 });
 
-const UserSchema = new Schema(
+const User_Schema = new Schema(
   {
-    _id: {
-      type: String,
-      trim: true,
-      lowercase: true,
-      required: true,
-      unique: true,
-      index: true,
-    },
     gmail: {
       type: String,
       trim: true,
@@ -58,17 +61,17 @@ const UserSchema = new Schema(
         trim: true,
         match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit mobile number"],
       },
-      countryCode: {
+      country_code: {
         type: String,
         default: "+91",
       },
-      isVerified: {
+      is_verified: {
         type: Boolean,
         default: false,
       },
     },
 
-    address: [addressSchema],
+    address: [{ Address_Schema }],
 
     cupon: [{ type: Schema.Types.ObjectId, ref: "Cupon" }],
     order: [{ type: Schema.Types.ObjectId, ref: "Order" }],
@@ -87,25 +90,22 @@ const UserSchema = new Schema(
       enum: ["user", "admin", "superAdmin"],
       default: "user",
     },
-    otp: {},
-    expiryOtp: {},
-    isLoggedin: {
+    otp: {
+      type: String,
+      default: null,
+    },
+    expiry_otp: {
+      type: Date,
+      default: null,
+    },
+    is_logged_in: {
       type: Boolean,
       default: false,
     },
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-    _id: false,
   },
 );
 
-UserSchema.pre("save", function (next) {
-  if (this.isNew && this.gmail) {
-    this._id = this.gmail.toLowerCase().replace(/[@.]/g, "-");
-  }
-  next();
-});
-export const User = mongoose.model("User", UserSchema);
+export const User = mongoose.model("User", User_Schema);
