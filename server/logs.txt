@@ -21,3 +21,9 @@ API RESPONSE STRUCTURE
 - MESSAGE = string                                           - DATA = NULL
 - DATA = json / object                                       - ERROR = []
 - TIMESTAMP = string / dateObject                            - ISOPERATIONAL = boolean 
+
+
+Three Media file i upload on a server
+-png
+-pdf
+-video (.m3u8)
