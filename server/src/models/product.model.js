@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import slugify from "slugify";
 import { User } from "./user.model.js";
+import { Category } from "./category.model.js";
 
 const Review_Schema = new Schema(
   {
@@ -32,17 +33,34 @@ const Product_Schema = new Schema(
       required: true,
       trim: true,
       lowercase: true,
+      set: function (value) {
+        return value
+          .replace(/\s+/g, " ")
+          .replace(/[^\w\s]/gi, "")
+          .trim();
+      },
     },
     model: {
       type: String,
       trim: true,
       lowercase: true,
       required: true,
+      set: function (value) {
+        return value
+          .replace(/\s+/g, " ")
+          .replace(/[^\w\s]/gi, "")
+          .trim();
+      },
     },
     slug: {
       type: String,
       trim: true,
       unique: true,
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
     },
     description: {
       type: String,
@@ -84,7 +102,7 @@ const Product_Schema = new Schema(
 
     media_assets: [
       {
-        asset_type: { type: String, enum: ["image", "video"], required: true },
+        resource_type: { type: String, required: true },
         secure_url: { type: String, required: true, trim: true },
         public_id: { type: String, required: true, trim: true },
         hls_url: { type: String, default: null },
@@ -98,9 +116,50 @@ const Product_Schema = new Schema(
       type: Number,
       default: 0,
     },
+    stock: {
+      type: Number,
+      default: 1,
+      min: 0,
+    },
+    stock_status: {
+      type: String,
+      enum: ["good", "fair", "critical"],
+      default: null,
+    },
+    active: {
+      type: Boolean,
+      default: true,
+    },
   },
+
   { timestamps: true },
 );
+
+Product_Schema.pre(["save", "updateOne", "findOneAndUpdate"], function (next) {
+  const update = this.getUpdate ? this.getUpdate() : this;
+
+  if (update.stock !== undefined) {
+    if (update.stock <= 0) {
+      update.active = false;
+      console.log("Stock is 0. Product deactivated automatically.");
+    }
+  }
+  next();
+});
+
+Product_Schema.pre(["save", "updateOne", "findOneAndUpdate"], function (next) {
+  const update = this.getUpdate ? this.getUpdate() : this;
+  if (update.stock !== undefined) {
+    if (update.stock <= 5) {
+      update.stock_status = "critical";
+    } else if (update.stock <= 20) {
+      update.stock_status = "fair";
+    } else {
+      update.stock_status = "good";
+    }
+  }
+  next();
+});
 
 Product_Schema.pre("save", function (next) {
   if (this.isModified("name") || this.isModified("model")) {
