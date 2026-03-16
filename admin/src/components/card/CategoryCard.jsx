@@ -1,6 +1,5 @@
 import { Trash2, Edit3 } from "lucide-react";
 import React, { useState } from "react";
-import CategoryForm from "../forms/CategoryForm";
 
 export default function CategoryCard(props, onDelete) {
   const [isEditing, setIsEditing] = useState(false);

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { CategoryCard } from "../../handler";
+
+import { CategoryCard, CreateCategoryForm } from "../../handler";
 export default function Categories() {
   const [Categories, setCategories] = useState(null);
 
   useEffect(() => {
-    axios.get()
+    axios.get();
   }, []);
 
   return (
@@ -13,7 +14,10 @@ export default function Categories() {
       <h1 className="w-full text-center text-white font-bold p-5 bg-yellow-500">
         Category
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4  mx-auto overflow-x-auto">
+
+      <CreateCategoryForm className="ml-20" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4">
         {" "}
         <CategoryCard />
       </div>
