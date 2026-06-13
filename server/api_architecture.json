@@ -1,0 +1,911 @@
+{
+  "api": {
+    "version": "v1",
+    "baseUrl": "https://api.yourapp.com/api/v1",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer <jwt_token>"
+    },
+    "responseEnvelope": {
+      "success": "boolean",
+      "message": "string (optional)",
+      "data": "object | array",
+      "pagination": "object (on list endpoints)"
+    }
+  },
+  "routes": {
+    "public": {
+      "description": "No authentication required",
+      "auth": "None",
+      "endpoints": [
+        {
+          "id": "auth_register",
+          "method": "POST",
+          "url": "/api/v1/auth/register",
+          "description": "Register a new user",
+          "auth": "None",
+          "rateLimit": "10 requests / 15 min per IP",
+          "requestBody": {
+            "name": "string (required)",
+            "email": "string (required, unique)",
+            "password": "string (required, min 8 chars)",
+            "phone": "string (required, 10 digits)",
+            "address": {
+              "street": "string",
+              "city": "string",
+              "state": "string",
+              "pincode": "string"
+            }
+          },
+          "requestExample": {
+            "name": "Anand Sharma",
+            "email": "anand@email.com",
+            "password": "Min8Chars#",
+            "phone": "9876543210",
+            "address": {
+              "street": "123 MG Road",
+              "city": "Gurugram",
+              "state": "Haryana",
+              "pincode": "122001"
+            }
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Registration successful",
+            "data": {
+              "user": {
+                "_id": "uid_xyz",
+                "name": "Anand Sharma",
+                "email": "anand@email.com",
+                "role": "user"
+              },
+              "token": "eyJhbGciOiJIUzI1NiIs..."
+            }
+          },
+          "responseErrors": {
+            "400": "Validation error — missing or invalid fields",
+            "409": "Email already registered"
+          }
+        },
+        {
+          "id": "auth_login",
+          "method": "POST",
+          "url": "/api/v1/auth/login",
+          "description": "Login and receive JWT token",
+          "auth": "None",
+          "rateLimit": "5 requests / 15 min per IP",
+          "requestBody": {
+            "email": "string (required)",
+            "password": "string (required)"
+          },
+          "requestExample": {
+            "email": "anand@email.com",
+            "password": "Min8Chars#"
+          },
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "token": "eyJhbGciOiJIUzI1NiIs...",
+              "user": {
+                "_id": "uid_xyz",
+                "name": "Anand Sharma",
+                "email": "anand@email.com",
+                "role": "user"
+              }
+            }
+          },
+          "responseErrors": {
+            "401": "Invalid credentials",
+            "403": "Account blocked",
+            "429": "Too many login attempts"
+          }
+        },
+        {
+          "id": "auth_logout",
+          "method": "POST",
+          "url": "/api/v1/auth/logout",
+          "description": "Logout — invalidate JWT (blacklist token)",
+          "auth": "JWT",
+          "requestBody": {},
+          "responseSuccess": {
+            "success": true,
+            "message": "Logged out successfully"
+          }
+        },
+        {
+          "id": "products_list",
+          "method": "GET",
+          "url": "/api/v1/products",
+          "description": "List all active products with filters and pagination",
+          "auth": "None",
+          "queryParams": {
+            "page": "number (default: 1)",
+            "limit": "number (default: 20, max: 100)",
+            "category": "string",
+            "minPrice": "number",
+            "maxPrice": "number",
+            "search": "string (searches name, description)",
+            "sort": "string (price_asc | price_desc | newest | rating)"
+          },
+          "requestExample": "GET /api/v1/products?page=1&limit=20&category=electronics&sort=price_asc",
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "products": [
+                {
+                  "_id": "pid_abc",
+                  "name": "Wireless Earbuds",
+                  "price": 1299,
+                  "mrp": 1999,
+                  "discount": 35,
+                  "category": "electronics",
+                  "brand": "SoundX",
+                  "stock": 45,
+                  "images": ["https://cdn.yourapp.com/img/earbuds.jpg"],
+                  "rating": 4.3,
+                  "reviewCount": 128,
+                  "isActive": true
+                }
+              ],
+              "pagination": {
+                "total": 200,
+                "page": 1,
+                "limit": 20,
+                "pages": 10
+              }
+            }
+          }
+        },
+        {
+          "id": "products_single",
+          "method": "GET",
+          "url": "/api/v1/products/:id",
+          "description": "Get full details of a single product",
+          "auth": "None",
+          "pathParams": {
+            "id": "MongoDB ObjectId of the product"
+          },
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "_id": "pid_abc",
+              "name": "Wireless Earbuds",
+              "description": "Bluetooth 5.3, 30hr battery, active noise cancellation",
+              "price": 1299,
+              "mrp": 1999,
+              "discount": 35,
+              "category": "electronics",
+              "brand": "SoundX",
+              "stock": 45,
+              "images": [
+                "https://cdn.yourapp.com/img/earbuds-1.jpg",
+                "https://cdn.yourapp.com/img/earbuds-2.jpg"
+              ],
+              "specs": {
+                "color": "Black",
+                "connectivity": "Bluetooth 5.3",
+                "battery": "30 hours",
+                "warranty": "1 year"
+              },
+              "rating": 4.3,
+              "reviewCount": 128,
+              "reviews": []
+            }
+          },
+          "responseErrors": {
+            "404": "Product not found"
+          }
+        },
+        {
+          "id": "categories_list",
+          "method": "GET",
+          "url": "/api/v1/categories",
+          "description": "Get all available product categories",
+          "auth": "None",
+          "responseSuccess": {
+            "success": true,
+            "data": ["electronics", "fashion", "home", "sports", "books", "beauty"]
+          }
+        }
+      ]
+    },
+    "user": {
+      "description": "Requires valid JWT token in Authorization header",
+      "auth": "Bearer JWT",
+      "middleware": ["verifyToken", "checkBlocked"],
+      "endpoints": [
+        {
+          "id": "cart_get",
+          "method": "GET",
+          "url": "/api/v1/cart",
+          "description": "Get the logged-in user's cart",
+          "auth": "JWT",
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "cartId": "cart_xyz",
+              "userId": "uid_xyz",
+              "items": [
+                {
+                  "product": {
+                    "_id": "pid_abc",
+                    "name": "Wireless Earbuds",
+                    "price": 1299,
+                    "image": "https://cdn.yourapp.com/img/earbuds.jpg",
+                    "stock": 45
+                  },
+                  "quantity": 2,
+                  "subtotal": 2598
+                }
+              ],
+              "totalItems": 2,
+              "totalAmount": 2598
+            }
+          }
+        },
+        {
+          "id": "cart_add",
+          "method": "POST",
+          "url": "/api/v1/cart/add",
+          "description": "Add a product to the cart",
+          "auth": "JWT",
+          "requestBody": {
+            "productId": "string (required)",
+            "quantity": "number (required, min: 1)"
+          },
+          "requestExample": {
+            "productId": "pid_abc",
+            "quantity": 2
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Item added to cart",
+            "data": {
+              "totalItems": 3,
+              "totalAmount": 3897
+            }
+          },
+          "responseErrors": {
+            "400": "Quantity exceeds available stock",
+            "404": "Product not found or inactive"
+          }
+        },
+        {
+          "id": "cart_update",
+          "method": "PUT",
+          "url": "/api/v1/cart/update",
+          "description": "Update quantity of a cart item",
+          "auth": "JWT",
+          "requestBody": {
+            "productId": "string (required)",
+            "quantity": "number (required, min: 1)"
+          },
+          "requestExample": {
+            "productId": "pid_abc",
+            "quantity": 3
+          },
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "totalItems": 3,
+              "totalAmount": 3897
+            }
+          }
+        },
+        {
+          "id": "cart_remove",
+          "method": "DELETE",
+          "url": "/api/v1/cart/remove/:productId",
+          "description": "Remove a specific item from cart",
+          "auth": "JWT",
+          "pathParams": {
+            "productId": "MongoDB ObjectId of product to remove"
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Item removed from cart",
+            "data": {
+              "totalItems": 1,
+              "totalAmount": 1299
+            }
+          }
+        },
+        {
+          "id": "cart_clear",
+          "method": "DELETE",
+          "url": "/api/v1/cart/clear",
+          "description": "Empty the entire cart",
+          "auth": "JWT",
+          "responseSuccess": {
+            "success": true,
+            "message": "Cart cleared"
+          }
+        },
+        {
+          "id": "orders_create",
+          "method": "POST",
+          "url": "/api/v1/orders/create",
+          "description": "Place order from cart — creates pending order and Razorpay order_id",
+          "auth": "JWT",
+          "flow": [
+            "1. Validate cart is not empty",
+            "2. Check stock for all items",
+            "3. Save pending order in MongoDB",
+            "4. Call Razorpay orders.create() API",
+            "5. Return razorpayOrderId to client"
+          ],
+          "requestBody": {
+            "deliveryAddress": {
+              "name": "string (required)",
+              "phone": "string (required)",
+              "street": "string (required)",
+              "city": "string (required)",
+              "state": "string (required)",
+              "pincode": "string (required)"
+            },
+            "paymentMethod": "string (razorpay)"
+          },
+          "requestExample": {
+            "deliveryAddress": {
+              "name": "Anand Sharma",
+              "phone": "9876543210",
+              "street": "123 MG Road",
+              "city": "Gurugram",
+              "state": "Haryana",
+              "pincode": "122001"
+            },
+            "paymentMethod": "razorpay"
+          },
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "orderId": "ORD_20260613_001",
+              "razorpayOrderId": "order_PQjF7x9zKmLR3w",
+              "amount": 2598,
+              "currency": "INR",
+              "keyId": "rzp_live_XXXXXXXXXX",
+              "prefill": {
+                "name": "Anand Sharma",
+                "email": "anand@email.com",
+                "contact": "9876543210"
+              }
+            }
+          },
+          "responseErrors": {
+            "400": "Cart is empty or stock unavailable",
+            "500": "Razorpay order creation failed"
+          }
+        },
+        {
+          "id": "payment_verify",
+          "method": "POST",
+          "url": "/api/v1/payment/verify",
+          "description": "Verify Razorpay payment signature — marks order as PAID",
+          "auth": "JWT",
+          "security": "HMAC-SHA256 signature verification using RAZORPAY_KEY_SECRET",
+          "requestBody": {
+            "razorpay_order_id": "string (required)",
+            "razorpay_payment_id": "string (required)",
+            "razorpay_signature": "string (required)",
+            "orderId": "string (your internal order ID)"
+          },
+          "requestExample": {
+            "razorpay_order_id": "order_PQjF7x9zKmLR3w",
+            "razorpay_payment_id": "pay_QrK8mN2xLp4wYz",
+            "razorpay_signature": "sha256_hmac_string_here",
+            "orderId": "ORD_20260613_001"
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Payment verified. Order confirmed.",
+            "data": {
+              "orderId": "ORD_20260613_001",
+              "status": "PAID",
+              "paymentId": "pay_QrK8mN2xLp4wYz",
+              "amount": 2598
+            }
+          },
+          "responseErrors": {
+            "400": "Signature verification failed — order stays PENDING"
+          }
+        },
+        {
+          "id": "payment_webhook",
+          "method": "POST",
+          "url": "/api/v1/payment/webhook",
+          "description": "Razorpay server-to-server webhook — backup for client verify failure",
+          "auth": "Razorpay webhook secret (x-razorpay-signature header)",
+          "note": "Do NOT apply JWT middleware here — this is called by Razorpay servers, not the client",
+          "headers": {
+            "x-razorpay-signature": "sha256_hmac_of_body"
+          },
+          "requestBody": {
+            "event": "payment.captured | payment.failed | refund.created",
+            "payload": {
+              "payment": {
+                "entity": {
+                  "id": "pay_QrK8mN2xLp4wYz",
+                  "order_id": "order_PQjF7x9zKmLR3w",
+                  "amount": 259800,
+                  "status": "captured"
+                }
+              }
+            }
+          },
+          "responseSuccess": {
+            "success": true
+          }
+        },
+        {
+          "id": "orders_mine",
+          "method": "GET",
+          "url": "/api/v1/orders/my",
+          "description": "Get all orders for the logged-in user",
+          "auth": "JWT",
+          "queryParams": {
+            "page": "number (default: 1)",
+            "limit": "number (default: 10)",
+            "status": "string (PENDING | PAID | PROCESSING | SHIPPED | DELIVERED | CANCELLED)"
+          },
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "orders": [
+                {
+                  "_id": "ORD_20260613_001",
+                  "items": [
+                    {
+                      "name": "Wireless Earbuds",
+                      "qty": 2,
+                      "price": 1299,
+                      "image": "https://cdn.yourapp.com/img/earbuds.jpg"
+                    }
+                  ],
+                  "totalAmount": 2598,
+                  "status": "PAID",
+                  "paymentId": "pay_QrK8mN2xLp4wYz",
+                  "deliveryAddress": {
+                    "city": "Gurugram",
+                    "state": "Haryana"
+                  },
+                  "createdAt": "2026-06-13T10:30:00Z"
+                }
+              ],
+              "pagination": {
+                "total": 5,
+                "page": 1,
+                "limit": 10,
+                "pages": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "orders_single",
+          "method": "GET",
+          "url": "/api/v1/orders/:id",
+          "description": "Get full detail of a single order (must belong to logged-in user)",
+          "auth": "JWT",
+          "security": "Server checks order.userId === req.user._id",
+          "pathParams": {
+            "id": "Order ID (ORD_...)"
+          },
+          "responseErrors": {
+            "403": "Order does not belong to this user",
+            "404": "Order not found"
+          }
+        },
+        {
+          "id": "profile_get",
+          "method": "GET",
+          "url": "/api/v1/profile",
+          "description": "Get the logged-in user's profile",
+          "auth": "JWT",
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "_id": "uid_xyz",
+              "name": "Anand Sharma",
+              "email": "anand@email.com",
+              "phone": "9876543210",
+              "role": "user",
+              "addresses": [
+                {
+                  "_id": "addr_001",
+                  "street": "123 MG Road",
+                  "city": "Gurugram",
+                  "state": "Haryana",
+                  "pincode": "122001",
+                  "isDefault": true
+                }
+              ],
+              "createdAt": "2026-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "profile_update",
+          "method": "PUT",
+          "url": "/api/v1/profile",
+          "description": "Update profile — name and phone only",
+          "auth": "JWT",
+          "security": "email and role fields are stripped server-side — cannot be changed via this endpoint",
+          "requestBody": {
+            "name": "string (optional)",
+            "phone": "string (optional)"
+          },
+          "requestExample": {
+            "name": "Anand S",
+            "phone": "9999999999"
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Profile updated",
+            "data": {
+              "_id": "uid_xyz",
+              "name": "Anand S",
+              "phone": "9999999999"
+            }
+          }
+        },
+        {
+          "id": "profile_address_add",
+          "method": "POST",
+          "url": "/api/v1/profile/address",
+          "description": "Add a new delivery address to the profile",
+          "auth": "JWT",
+          "requestBody": {
+            "street": "string (required)",
+            "city": "string (required)",
+            "state": "string (required)",
+            "pincode": "string (required)",
+            "isDefault": "boolean (optional, default: false)"
+          },
+          "requestExample": {
+            "street": "456 DLF Phase 2",
+            "city": "Gurugram",
+            "state": "Haryana",
+            "pincode": "122002",
+            "isDefault": false
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Address added",
+            "data": {
+              "addresses": []
+            }
+          }
+        },
+        {
+          "id": "profile_address_delete",
+          "method": "DELETE",
+          "url": "/api/v1/profile/address/:addressId",
+          "description": "Remove a saved address",
+          "auth": "JWT",
+          "pathParams": {
+            "addressId": "MongoDB ObjectId of address sub-document"
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Address removed"
+          }
+        }
+      ]
+    },
+    "admin": {
+      "description": "Requires valid JWT with role: admin",
+      "auth": "Bearer JWT + role: admin",
+      "middleware": ["verifyToken", "isAdmin"],
+      "endpoints": [
+        {
+          "id": "admin_products_create",
+          "method": "POST",
+          "url": "/api/v1/admin/products",
+          "description": "Create a new product",
+          "auth": "JWT + Admin",
+          "requestBody": {
+            "name": "string (required)",
+            "description": "string (required)",
+            "price": "number (required)",
+            "mrp": "number (required)",
+            "category": "string (required)",
+            "brand": "string (required)",
+            "stock": "number (required)",
+            "images": "string[] (URLs)",
+            "specs": "object (key-value pairs)"
+          },
+          "requestExample": {
+            "name": "Wireless Earbuds",
+            "description": "Bluetooth 5.3, 30hr battery, ANC",
+            "price": 1299,
+            "mrp": 1999,
+            "category": "electronics",
+            "brand": "SoundX",
+            "stock": 100,
+            "images": ["https://cdn.yourapp.com/img/earbuds.jpg"],
+            "specs": {
+              "color": "Black",
+              "connectivity": "Bluetooth 5.3",
+              "warranty": "1 year"
+            }
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Product created",
+            "data": {
+              "_id": "pid_abc",
+              "name": "Wireless Earbuds",
+              "isActive": true,
+              "createdAt": "2026-06-13T10:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "admin_products_update",
+          "method": "PUT",
+          "url": "/api/v1/admin/products/:id",
+          "description": "Update any product field (partial update supported)",
+          "auth": "JWT + Admin",
+          "pathParams": {
+            "id": "MongoDB ObjectId of product"
+          },
+          "requestExample": {
+            "price": 999,
+            "stock": 150
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Product updated",
+            "data": {
+              "_id": "pid_abc",
+              "price": 999,
+              "stock": 150
+            }
+          }
+        },
+        {
+          "id": "admin_products_delete",
+          "method": "DELETE",
+          "url": "/api/v1/admin/products/:id",
+          "description": "Soft delete product — sets isActive: false, not removed from DB",
+          "auth": "JWT + Admin",
+          "pathParams": {
+            "id": "MongoDB ObjectId of product"
+          },
+          "note": "Product disappears from all public routes. Order history still references it correctly.",
+          "responseSuccess": {
+            "success": true,
+            "message": "Product deactivated"
+          }
+        },
+        {
+          "id": "admin_orders_all",
+          "method": "GET",
+          "url": "/api/v1/admin/orders",
+          "description": "Get all orders system-wide with filters",
+          "auth": "JWT + Admin",
+          "queryParams": {
+            "page": "number (default: 1)",
+            "limit": "number (default: 50)",
+            "status": "string (PENDING | PAID | PROCESSING | SHIPPED | DELIVERED | CANCELLED)",
+            "dateFrom": "ISO date string",
+            "dateTo": "ISO date string",
+            "userId": "string (filter by specific user)"
+          },
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "orders": [
+                {
+                  "_id": "ORD_20260613_001",
+                  "user": {
+                    "_id": "uid_xyz",
+                    "name": "Anand Sharma",
+                    "email": "anand@email.com"
+                  },
+                  "items": [
+                    {
+                      "name": "Wireless Earbuds",
+                      "qty": 2,
+                      "price": 1299
+                    }
+                  ],
+                  "totalAmount": 2598,
+                  "status": "PAID",
+                  "paymentId": "pay_QrK8mN2xLp4wYz",
+                  "deliveryAddress": {
+                    "name": "Anand Sharma",
+                    "city": "Gurugram",
+                    "state": "Haryana",
+                    "pincode": "122001"
+                  },
+                  "createdAt": "2026-06-13T10:30:00Z"
+                }
+              ],
+              "pagination": {
+                "total": 540,
+                "page": 1,
+                "limit": 50,
+                "pages": 11
+              }
+            }
+          }
+        },
+        {
+          "id": "admin_orders_status",
+          "method": "PUT",
+          "url": "/api/v1/admin/orders/:id/status",
+          "description": "Update order status — processing, shipping, delivery",
+          "auth": "JWT + Admin",
+          "pathParams": {
+            "id": "Order ID (ORD_...)"
+          },
+          "allowedStatusFlow": "PENDING → PAID → PROCESSING → SHIPPED → DELIVERED | CANCELLED",
+          "requestBody": {
+            "status": "string (required — see allowedStatusFlow)",
+            "trackingId": "string (optional — for SHIPPED status)",
+            "note": "string (optional — internal note)"
+          },
+          "requestExample": {
+            "status": "SHIPPED",
+            "trackingId": "DTDC1234567890",
+            "note": "Dispatched from Gurugram warehouse"
+          },
+          "responseSuccess": {
+            "success": true,
+            "message": "Order status updated to SHIPPED",
+            "data": {
+              "_id": "ORD_20260613_001",
+              "status": "SHIPPED",
+              "trackingId": "DTDC1234567890"
+            }
+          },
+          "responseErrors": {
+            "400": "Invalid status transition",
+            "404": "Order not found"
+          }
+        },
+        {
+          "id": "admin_users_all",
+          "method": "GET",
+          "url": "/api/v1/admin/users",
+          "description": "Get all registered users",
+          "auth": "JWT + Admin",
+          "security": "password field NEVER returned — Mongoose select('-password')",
+          "queryParams": {
+            "page": "number (default: 1)",
+            "limit": "number (default: 50)",
+            "search": "string (searches name, email)",
+            "isBlocked": "boolean"
+          },
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "users": [
+                {
+                  "_id": "uid_xyz",
+                  "name": "Anand Sharma",
+                  "email": "anand@email.com",
+                  "phone": "9876543210",
+                  "role": "user",
+                  "isBlocked": false,
+                  "ordersCount": 3,
+                  "totalSpent": 5200,
+                  "createdAt": "2026-01-01T00:00:00Z"
+                }
+              ],
+              "pagination": {
+                "total": 1240,
+                "page": 1,
+                "limit": 50
+              }
+            }
+          }
+        },
+        {
+          "id": "admin_users_block",
+          "method": "PUT",
+          "url": "/api/v1/admin/users/:id/block",
+          "description": "Block or unblock a user account",
+          "auth": "JWT + Admin",
+          "pathParams": {
+            "id": "MongoDB ObjectId of user"
+          },
+          "requestBody": {
+            "isBlocked": "boolean (required)"
+          },
+          "requestExample": {
+            "isBlocked": true
+          },
+          "note": "JWT middleware checks isBlocked on every protected request — blocked users instantly get 403",
+          "responseSuccess": {
+            "success": true,
+            "message": "User blocked successfully"
+          }
+        },
+        {
+          "id": "admin_analytics_revenue",
+          "method": "GET",
+          "url": "/api/v1/admin/analytics/revenue",
+          "description": "Revenue report with date range and grouping",
+          "auth": "JWT + Admin",
+          "queryParams": {
+            "from": "ISO date string (required)",
+            "to": "ISO date string (required)",
+            "groupBy": "string (day | month | year)"
+          },
+          "requestExample": "GET /api/v1/admin/analytics/revenue?from=2026-01-01&to=2026-06-13&groupBy=month",
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "totalRevenue": 542800,
+              "totalOrders": 210,
+              "avgOrderValue": 2585,
+              "breakdown": [
+                {
+                  "period": "2026-05",
+                  "revenue": 98400,
+                  "orders": 38
+                },
+                {
+                  "period": "2026-06",
+                  "revenue": 71200,
+                  "orders": 27
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "admin_analytics_dashboard",
+          "method": "GET",
+          "url": "/api/v1/admin/analytics/dashboard",
+          "description": "Dashboard summary — today's stats, totals, alerts",
+          "auth": "JWT + Admin",
+          "responseSuccess": {
+            "success": true,
+            "data": {
+              "todayRevenue": 12400,
+              "todayOrders": 5,
+              "totalUsers": 1240,
+              "newUsersToday": 8,
+              "totalProducts": 86,
+              "activeProducts": 82,
+              "pendingOrders": 12,
+              "lowStockProducts": 4,
+              "lowStockThreshold": 10
+            }
+          }
+        }
+      ]
+    }
+  },
+  "security": {
+    "jwt": {
+      "algorithm": "HS256",
+      "expiresIn": "7d",
+      "headerFormat": "Authorization: Bearer <token>",
+      "storage": "httpOnly cookie or Authorization header — never localStorage"
+    },
+    "rateLimit": {
+      "login": "5 requests / 15 min per IP",
+      "register": "10 requests / 15 min per IP",
+      "global": "100 requests / 15 min per IP"
+    },
+    "recommendedMiddleware": [
+      "helmet — sets secure HTTP headers",
+      "cors — restrict allowed origins",
+      "express-rate-limit — rate limiting",
+      "express-mongo-sanitize — prevent NoSQL injection",
+      "express.json({ limit: '10kb' }) — limit payload size",
+      "hpp — prevent HTTP parameter pollution"
+    ]
+  },
+  "scaling": {
+    "versioning": "All routes prefixed /api/v1 — ship /api/v2 without touching v1",
+    "pagination": "All list endpoints paginated from day one — no full collection dumps",
+    "indexes": "Index MongoDB on: userId, orderId, status, category, createdAt",
+    "caching": "Public product routes safe to cache via Redis or CDN — no auth required",
+    "softDelete": "Products use isActive flag — never hard delete, preserves order history"
+  }
+}
