@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    /* Target and Module Systems */
+    "target": "ES2022" /* Specify ECMAScript target version */,
+    "module": "NodeNext" /* Standard for modern Node.js ES Modules */,
+    "moduleResolution": "NodeNext" /* Tells TS how to look up files in node_modules */,
+
+    /* Build Directories */
+    "outDir": "./dist" /* Redirect output structure to this folder */,
+    "rootDir": "./src" /* Specify the root folder of input files */,
+    "removeComments": true /* Strip comments to reduce production file size */,
+    "sourceMap": true /* Helps with debugging production errors back to TS source */,
+
+    /* Strict Type-Checking Options */
+    "strict": true /* Enable all strict type-checking options */,
+    "noImplicitAny": true /* Raise error on expressions and declarations with an implied 'any' type */,
+    "strictNullChecks": true /* Ensure null and undefined are handled safely */,
+
+    /* Additional Checks */
+    "noUnusedLocals": true /* Report errors on unused local variables */,
+    "noUnusedParameters": true /* Report errors on unused function parameters */,
+    "noImplicitReturns": true /* Report error when not all code paths in function return a value */,
+    "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement */,
+
+    /* Module Resolution Options */
+    "esModuleInterop": true /* Emits additional JavaScript to ease importing CommonJS modules */,
+    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file */,
+    "skipLibCheck": true /* Skip type checking of declaration files (*.d.ts) to speed up compilation */
+  },
+  "include": ["src/**/*"] /* Compile everything inside the src directory */,
+  "exclude": [
+    "node_modules",
+    "dist"
+  ] /* Explicitly ignore these folders during compilation */
+}
