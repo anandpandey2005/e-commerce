@@ -9,7 +9,7 @@ export interface IAddress {
   state: string;
   pincode: string;
   country: string;
-  isDefault: boolean;
+  is_default: boolean;
 }
 
 export type OrderStatus =
@@ -22,7 +22,7 @@ export interface IOrderItem {
   sku: string;
   price: number;
   quantity: number;
-  image: { public_id: string, secure_url: string, resource_type: string };
+  image: { public_id: string; secure_url: string; resource_type: string };
 }
 
 export interface IOrder {
@@ -77,6 +77,17 @@ export interface IUser {
   otp?: string;
   otp_expiry?: Date;
   archived: boolean;
+  is_deleted: boolean;
+  deleted_at?: Date;
+  pending_email?: string;
+  pending_phone?: {
+    country_code: string;
+    number: string;
+  };
+  email_otp?: string;
+  email_otp_expiry?: Date;
+  phone_otp?: string;
+  phone_otp_expiry?: Date;
   role: 'user' | 'owner' | 'support' | 'employee';
   is_email_verified: boolean;
   is_phone_verified: boolean;

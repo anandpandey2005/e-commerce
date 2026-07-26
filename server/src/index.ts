@@ -19,7 +19,9 @@ async function database_config() {
     if (error instanceof Error) {
       console.log(`Database connection error: ${error.message}`);
     } else {
-      console.log('An unexpected system error occurred during database connection.');
+      console.log(
+        'An unexpected system error occurred during database connection.'
+      );
     }
     process.exit(1);
   }
@@ -29,5 +31,4 @@ database_config().then(() => {
   app.listen(Number(PORT), () => {
     console.log(`Server is running at http://localhost:${PORT}`);
   });
-
 });

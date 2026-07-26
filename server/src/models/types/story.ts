@@ -1,5 +1,5 @@
-import { Types } from "mongoose"
-import { ICloudinaryImage } from "./catalog.js";
+import { Types } from 'mongoose';
+import { ICloudinaryImage } from './catalog.js';
 export interface IStory {
   _id: Types.ObjectId;
   title: string;

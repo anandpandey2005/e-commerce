@@ -1,10 +1,8 @@
 import { Response } from 'express';
-import { ZodError } from 'zod';
 import { AuthenticatedRequest } from '../../../middleware/auth.js';
 import { User } from '../../../models/user.js';
-import { update_name_schema } from '../../../validations/user.js';
 
-export async function update_name(
+export async function get_settings(
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
@@ -16,19 +14,6 @@ export async function update_name(
       });
       return;
     }
-
-    const zod_result = update_name_schema.safeParse(req.body);
-
-    if (!zod_result.success) {
-      res.status(400).json({
-        success: false,
-        message: 'Validation failed.',
-        errors: zod_result.error.flatten().fieldErrors,
-      });
-      return;
-    }
-
-    const { full_name } = zod_result.data;
 
     const user = await User.findOne({
       _id: req.user._id,
@@ -43,29 +28,26 @@ export async function update_name(
       return;
     }
 
-    user.full_name = full_name;
-    await user.save();
+    const default_settings = {
+      theme: 'system',
+      currency: 'INR',
+      language: 'en',
+      notifications: {
+        email: true,
+        sms: false,
+        push: true,
+      },
+    };
 
     res.status(200).json({
       success: true,
-      message: 'Full name updated successfully.',
+      message: 'User settings retrieved successfully.',
       data: {
-        id: user._id,
-        full_name: user.full_name,
-        email: user.email,
-        phone: user.phone,
+        settings: user.settings || default_settings,
       },
     });
     return;
   } catch (err: unknown) {
-    if (err instanceof ZodError) {
-      res.status(400).json({
-        success: false,
-        message: 'Validation failed.',
-        errors: err.flatten().fieldErrors,
-      });
-      return;
-    }
     if (err instanceof Error) {
       res.status(500).json({
         success: false,

@@ -2,11 +2,9 @@ import { Response } from 'express';
 import { ZodError } from 'zod';
 import { AuthenticatedRequest } from '../../../middleware/auth.js';
 import { User } from '../../../models/user.js';
-import { delete_address_schema } from '../../../validations/user.js';
+import { update_settings_schema } from '../../../validations/user.js';
 
-import { normalizeDefaultAddress } from '../../../utils/address_helper.js';
-
-export async function delete_address(
+export async function update_settings(
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> {
@@ -19,7 +17,7 @@ export async function delete_address(
       return;
     }
 
-    const zod_result = delete_address_schema.safeParse(req.body);
+    const zod_result = update_settings_schema.safeParse(req.body);
 
     if (!zod_result.success) {
       res.status(400).json({
@@ -30,7 +28,7 @@ export async function delete_address(
       return;
     }
 
-    const { _id } = zod_result.data;
+    const update_data = zod_result.data;
 
     const user = await User.findOne({
       _id: req.user._id,
@@ -45,32 +43,55 @@ export async function delete_address(
       return;
     }
 
-    const address_to_delete = user.saved_address.find(
-      (addr) => addr._id && addr._id.toString() === _id
-    );
-
-    if (!address_to_delete) {
-      res.status(404).json({
-        success: false,
-        message: 'Address not found with the provided _id.',
-      });
-      return;
+    if (!user.settings) {
+      user.settings = {
+        theme: 'system',
+        currency: 'INR',
+        language: 'en',
+        notifications: {
+          email: true,
+          sms: false,
+          push: true,
+        },
+      };
     }
 
-    user.saved_address = user.saved_address.filter(
-      (addr) => !(addr._id && addr._id.toString() === _id)
-    );
+    if (update_data.theme !== undefined) {
+      user.settings.theme = update_data.theme;
+    }
+    if (update_data.currency !== undefined) {
+      user.settings.currency = update_data.currency;
+    }
+    if (update_data.language !== undefined) {
+      user.settings.language = update_data.language;
+    }
 
-    normalizeDefaultAddress(user.saved_address);
+    if (update_data.notifications !== undefined) {
+      if (!user.settings.notifications) {
+        user.settings.notifications = {
+          email: true,
+          sms: false,
+          push: true,
+        };
+      }
+      if (update_data.notifications.email !== undefined) {
+        user.settings.notifications.email = update_data.notifications.email;
+      }
+      if (update_data.notifications.sms !== undefined) {
+        user.settings.notifications.sms = update_data.notifications.sms;
+      }
+      if (update_data.notifications.push !== undefined) {
+        user.settings.notifications.push = update_data.notifications.push;
+      }
+    }
 
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: 'Address deleted successfully.',
+      message: 'User settings updated successfully.',
       data: {
-        deleted_id: _id,
-        saved_address: user.saved_address,
+        settings: user.settings,
       },
     });
     return;
