@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { IUser, IAddress, IUserSettings } from './types/user.js';
 
+
 const AddressSchema = new Schema<IAddress>({
   tag: { type: String, lowercase: true, trim: true, required: true },
   line_1: { type: String, lowercase: true, trim: true, required: true },
@@ -32,7 +33,7 @@ const SettingsSchema = new Schema<IUserSettings>(
 
 const UserSchema = new Schema<IUser>(
   {
-    avatar: { type: String, default: '' },
+    avatar: { public_id: { type: String, trim: true  , default : ''}, secure_url: { type: String, trim: true  , default : ''}, resource_type: { type: String, trim: true  , default : ''} },
     full_name: { type: String, required: true, lowercase: true, trim: true },
     phone: {
       country_code: { type: String, required: true, default: '+91' },

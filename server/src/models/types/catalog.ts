@@ -1,8 +1,14 @@
 import { Types } from 'mongoose';
 
+export interface ICloudinaryImage {
+  public_id: string;
+  secure_url: string;
+  resource_type: string;
+}
+
 export interface ICategory {
   _id: Types.ObjectId;
-  images: string[];
+  media: ICloudinaryImage[];
   name: string;
   slug: string;
   description: string;
@@ -44,7 +50,7 @@ export interface IProduct {
   is_it_featured: boolean;
   category_id: Types.ObjectId;
   brand: string;
-  images: string[];
+  media: ICloudinaryImage[];
   thumbnail: string;
   highlights: IProductHighlight[];
   specifications: IProductSpecification[];

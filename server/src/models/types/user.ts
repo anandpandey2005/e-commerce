@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-
+import { ICloudinaryImage } from './catalog.js';
 export interface IAddress {
   _id?: Types.ObjectId;
   tag: string;
@@ -22,7 +22,7 @@ export interface IOrderItem {
   sku: string;
   price: number;
   quantity: number;
-  image: string;
+  image: { public_id: string, secure_url: string, resource_type: string };
 }
 
 export interface IOrder {
@@ -61,7 +61,7 @@ export interface IUserSettings {
 
 export interface IUser {
   _id: Types.ObjectId;
-  avatar: string;
+  avatar: ICloudinaryImage;
   full_name: string;
   phone: {
     country_code: string;

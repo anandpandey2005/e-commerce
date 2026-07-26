@@ -65,7 +65,13 @@ const ProductSchema = new Schema<IProduct>(
       required: true,
     },
     brand: { type: String, required: true, lowercase: true, trim: true },
-    images: { type: [String], default: [] },
+    media: [
+      {
+        public_id: { type: String, required: true },
+        secure_url: { type: String, required: true },
+        resource_type: { type: String },
+      },
+    ],
     thumbnail: { type: String, required: true, trim: true },
     highlights: { type: [ProductHighlightSchema], default: [] },
     specifications: { type: [ProductSpecificationSchema], default: [] },
