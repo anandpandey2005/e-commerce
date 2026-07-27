@@ -82,7 +82,7 @@ const UserSchema = new Schema<IUser>(
     deleted_at: { type: Date },
     role: {
       type: String,
-      enum: ['user', 'owner', 'support', 'employee'],
+      enum: ['user'],
       default: 'user',
     },
     is_email_verified: { type: Boolean, default: false },
@@ -91,7 +91,6 @@ const UserSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Partial unique indexes for active users so soft-deleted accounts do not block re-registration
 UserSchema.index(
   { email: 1 },
   { unique: true, partialFilterExpression: { is_deleted: false } }

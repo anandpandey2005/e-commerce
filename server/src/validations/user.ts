@@ -85,7 +85,12 @@ export const add_address_schema = z.object({
   landmark: z.string().trim().optional(),
   state: z.string().trim().min(1, 'State is required.'),
   pincode: z.string().trim().min(1, 'Pincode is required.'),
-  country: z.string().trim().min(1, 'Country is required.').optional().default("india"),
+  country: z
+    .string()
+    .trim()
+    .min(1, 'Country is required.')
+    .optional()
+    .default('india'),
   is_default: z.boolean().optional().default(false),
 });
 
@@ -151,4 +156,3 @@ export const update_settings_schema = z.object({
     })
     .optional(),
 });
-

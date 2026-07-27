@@ -84,7 +84,9 @@ export async function request_logout_otp(
       return;
     }
 
-    const generated_otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const generated_otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
     const otp_expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     user.otp = generated_otp;
@@ -97,7 +99,9 @@ export async function request_logout_otp(
       message: 'Logout OTP sent successfully.',
       data: {
         otp_sent: true,
-        ...(process.env.NODE_ENV !== 'production' && { dev_otp: generated_otp }),
+        ...(process.env.NODE_ENV !== 'production' && {
+          dev_otp: generated_otp,
+        }),
       },
     });
     return;

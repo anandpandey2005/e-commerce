@@ -5,7 +5,10 @@ import { User } from '../../../models/user.js';
 import { refresh_token_schema } from '../../../validations/user.js';
 import { generate_tokens, set_token_cookies } from '../../../utils/token.js';
 
-export async function refresh_token(req: Request, res: Response): Promise<void> {
+export async function refresh_token(
+  req: Request,
+  res: Response
+): Promise<void> {
   try {
     const zod_result = refresh_token_schema.safeParse(req?.body);
 
@@ -24,7 +27,10 @@ export async function refresh_token(req: Request, res: Response): Promise<void> 
       input_refresh_token = req.cookies.refresh_token;
     } else if (!input_refresh_token && req.headers['x-refresh-token']) {
       input_refresh_token = req.headers['x-refresh-token'] as string;
-    } else if (!input_refresh_token && req.headers.authorization?.startsWith('Bearer ')) {
+    } else if (
+      !input_refresh_token &&
+      req.headers.authorization?.startsWith('Bearer ')
+    ) {
       input_refresh_token = req.headers.authorization.split(' ')[1];
     }
 
@@ -43,7 +49,9 @@ export async function refresh_token(req: Request, res: Response): Promise<void> 
 
     let decoded: { id: string };
     try {
-      decoded = jwt.verify(input_refresh_token, refresh_secret) as { id: string };
+      decoded = jwt.verify(input_refresh_token, refresh_secret) as {
+        id: string;
+      };
     } catch {
       res.status(401).json({
         success: false,

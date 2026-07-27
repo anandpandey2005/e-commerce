@@ -12,9 +12,13 @@ export function generate_tokens(
   role: string
 ): TokenPair {
   const access_secret =
-    process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'default_jwt_access_secret_key';
+    process.env.JWT_ACCESS_SECRET ||
+    process.env.JWT_SECRET ||
+    'default_jwt_access_secret_key';
   const refresh_secret =
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'default_jwt_refresh_secret_key';
+    process.env.JWT_REFRESH_SECRET ||
+    process.env.JWT_SECRET ||
+    'default_jwt_refresh_secret_key';
 
   const access_token = jwt.sign(
     { id: user_id.toString(), role },

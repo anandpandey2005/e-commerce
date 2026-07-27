@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { authenticate_user } from '../middleware/auth.js';
+import { upload_by_user } from '../middleware/upload.js';
+import { add_avatar } from '../controller/user/account/add_avatar.js';
 import { sign_up } from '../controller/user/account/sign_up.js';
 import { sign_in } from '../controller/user/account/sign_in.js';
 import { refresh_token } from '../controller/user/account/refresh_token.js';
@@ -28,14 +30,26 @@ router.post('/refresh-token', refresh_token);
 router.post('/logout-otp/request', request_logout_otp);
 router.post('/logout-otp/verify', verify_logout_otp);
 
-// Authenticated user account 
+// Authenticated user account
 router.post('/logout', authenticate_user, logout);
+router.post(
+  '/avatar',
+  authenticate_user,
+  upload_by_user.single('avatar'),
+  add_avatar
+);
+router.patch(
+  '/avatar',
+  authenticate_user,
+  upload_by_user.single('avatar'),
+  add_avatar
+);
 router.get('/me', authenticate_user, retrieve_account);
 router.patch('/name', authenticate_user, update_name);
 router.patch('/email', authenticate_user, update_email);
 router.patch('/phone', authenticate_user, update_phone);
 
-// User settings 
+// User settings
 router.get('/settings', authenticate_user, get_settings);
 router.patch('/settings', authenticate_user, update_settings);
 
@@ -44,7 +58,7 @@ router.post('/address/add', authenticate_user, add_address);
 router.patch('/address/update', authenticate_user, update_address);
 router.delete('/address/delete', authenticate_user, delete_address);
 
-// Soft delete account 
+// Soft delete account
 router.delete('/delete', authenticate_user, delete_account);
 
 export default router;
