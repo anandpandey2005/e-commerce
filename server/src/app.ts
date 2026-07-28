@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import userRouter from './routes/user.js';
+import adminRouter from './routes/admin.js';
 
 const app: Application = express();
 
@@ -25,5 +26,6 @@ app.get('/api/v1/health', (req: Request, res: Response): void => {
 });
 
 app.use('/api/v1/user/account', userRouter);
+app.use('/api/v1/admin', adminRouter);
 
 export default app;

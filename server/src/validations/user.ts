@@ -144,15 +144,16 @@ export const logout_otp_verify_schema = z
     path: ['email'],
   });
 
+export const update_notification_schema = z.object({
+  email: z.boolean().optional(),
+  sms: z.boolean().optional(),
+  push: z.boolean().optional(),
+});
+
 export const update_settings_schema = z.object({
   theme: z.enum(['light', 'dark', 'system']).optional(),
   currency: z.string().trim().min(1, 'Currency cannot be empty.').optional(),
   language: z.string().trim().min(1, 'Language cannot be empty.').optional(),
-  notifications: z
-    .object({
-      email: z.boolean().optional(),
-      sms: z.boolean().optional(),
-      push: z.boolean().optional(),
-    })
-    .optional(),
+  notifications: update_notification_schema.optional(),
 });
+

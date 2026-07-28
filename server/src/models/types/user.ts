@@ -88,7 +88,7 @@ export interface IUser {
   email_otp_expiry?: Date;
   phone_otp?: string;
   phone_otp_expiry?: Date;
-  role: 'user' | 'owner' | 'support' | 'employee';
+  role: 'user' | 'admin' | 'owner' | 'support' | 'employee';
   is_email_verified: boolean;
   is_phone_verified: boolean;
   createdAt: Date;

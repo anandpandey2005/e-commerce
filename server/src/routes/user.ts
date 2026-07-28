@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate_user } from '../middleware/auth.js';
+import { is_user } from '../middleware/is_user.js';
 import { upload_by_user } from '../middleware/upload.js';
 import { add_avatar } from '../controller/user/account/add_avatar.js';
 import { sign_up } from '../controller/user/account/sign_up.js';
@@ -20,6 +21,7 @@ import { delete_address } from '../controller/user/account/delete_address.js';
 import { delete_account } from '../controller/user/account/delete_account.js';
 import { get_settings } from '../controller/user/account/get_settings.js';
 import { update_settings } from '../controller/user/account/update_settings.js';
+import { update_notification } from '../controller/user/account/update_notification.js';
 
 const router = Router();
 
@@ -31,34 +33,37 @@ router.post('/logout-otp/request', request_logout_otp);
 router.post('/logout-otp/verify', verify_logout_otp);
 
 // Authenticated user account
-router.post('/logout', authenticate_user, logout);
+router.post('/logout', authenticate_user, is_user, logout);
 router.post(
   '/avatar',
   authenticate_user,
+  is_user,
   upload_by_user.single('avatar'),
   add_avatar
 );
 router.patch(
   '/avatar',
   authenticate_user,
+  is_user,
   upload_by_user.single('avatar'),
   add_avatar
 );
-router.get('/me', authenticate_user, retrieve_account);
-router.patch('/name', authenticate_user, update_name);
-router.patch('/email', authenticate_user, update_email);
-router.patch('/phone', authenticate_user, update_phone);
+router.get('/me', authenticate_user, is_user, retrieve_account);
+router.patch('/name', authenticate_user, is_user, update_name);
+router.patch('/email', authenticate_user, is_user, update_email);
+router.patch('/phone', authenticate_user, is_user, update_phone);
 
 // User settings
-router.get('/settings', authenticate_user, get_settings);
-router.patch('/settings', authenticate_user, update_settings);
+router.get('/settings', authenticate_user, is_user, get_settings);
+router.patch('/settings', authenticate_user, is_user, update_settings);
+router.patch('/notifications', authenticate_user, is_user, update_notification);
 
 // Address management
-router.post('/address/add', authenticate_user, add_address);
-router.patch('/address/update', authenticate_user, update_address);
-router.delete('/address/delete', authenticate_user, delete_address);
+router.post('/address/add', authenticate_user, is_user, add_address);
+router.patch('/address/update', authenticate_user, is_user, update_address);
+router.delete('/address/delete', authenticate_user, is_user, delete_address);
 
 // Soft delete account
-router.delete('/delete', authenticate_user, delete_account);
+router.delete('/delete', authenticate_user, is_user, delete_account);
 
 export default router;

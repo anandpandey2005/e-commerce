@@ -19,7 +19,7 @@ const CategorySchema = new Schema<ICategory>(
         resource_type: { type: String },
       },
     ],
-    isActive: { type: Boolean, default: true },
+    is_active: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

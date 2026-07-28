@@ -86,7 +86,7 @@ const ProductSchema = new Schema<IProduct>(
       default: 'IN_STOCK',
       required: true,
     },
-    archived: { type: Boolean, default: false },
+    is_active: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

@@ -12,7 +12,7 @@ export interface ICategory {
   name: string;
   slug: string;
   description: string;
-  isActive: boolean;
+  is_active: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,7 +60,7 @@ export interface IProduct {
     count: number;
   };
   stock_availabilty_flag: string;
-  archived: boolean;
+  is_active: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

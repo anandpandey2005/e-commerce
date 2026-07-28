@@ -82,7 +82,7 @@ const UserSchema = new Schema<IUser>(
     deleted_at: { type: Date },
     role: {
       type: String,
-      enum: ['user'],
+      enum: ['user', 'admin', 'support', 'employee'],
       default: 'user',
     },
     is_email_verified: { type: Boolean, default: false },
