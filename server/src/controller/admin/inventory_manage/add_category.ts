@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { Admin_Category } from '../../../models/category.js';
 import { add_category_schema } from '../../../validations/catalog.js';
-import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
+import {
+  upload_to_cloudinary,
+  extract_multer_files,
+  upload_multiple_to_cloudinary,
+} from '../../../utils/upload_on_cloudinary.js';
 
 export function generate_slug(text: string): string {
   return text
@@ -36,34 +40,17 @@ export async function add_category(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const media: { public_id: string; secure_url: string; resource_type: string }[] = [];
-
-    // Handle single or multiple file uploads if present via multer
-    const files = req.files as Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
-    if (files) {
-      let file_array: Express.Multer.File[] = [];
-      if (Array.isArray(files)) {
-        file_array = files;
-      } else if (typeof files === 'object') {
-        Object.values(files).forEach((arr) => {
-          file_array.push(...arr);
-        });
-      }
-
-      for (const file of file_array) {
-        const upload_result = await upload_to_cloudinary(
-          file.buffer,
-          `categories/${slug}/${file.originalname}`
-        );
-        media.push(upload_result);
-      }
-    } else if (req.file) {
-      const upload_result = await upload_to_cloudinary(
-        req.file.buffer,
-        `categories/${slug}/${req.file.originalname}`
-      );
-      media.push(upload_result);
+    const { all_files } = extract_multer_files(req);
+    if (!all_files.length) {
+      res.status(400).json({
+        success: false,
+        message: 'No files uploaded.',
+      });
+      return;
     }
+
+    const media = await upload_multiple_to_cloudinary(all_files, `${process.env.STORE_NAME}/admin/categories/${slug}/media`);
+
 
     const category = new Admin_Category({
       name,

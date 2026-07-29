@@ -92,6 +92,11 @@ const ProductSchema = new Schema<IProduct>(
   { timestamps: true }
 );
 
+ProductSchema.index({ name: 'text', sku: 'text', brand: 'text' });
+ProductSchema.index({ category_id: 1, is_active: 1, createdAt: -1 });
+ProductSchema.index({ stock_availabilty_flag: 1, is_active: 1 });
+ProductSchema.index({ is_active: 1, createdAt: -1 });
+
 export const Admin_Product = admin_db.model<IProduct>('Product', ProductSchema);
 export const User_Product = user_db.model<IProduct>('Product', ProductSchema);
 export const Product = Admin_Product;

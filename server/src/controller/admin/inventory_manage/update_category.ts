@@ -2,7 +2,11 @@ import { Request, Response } from 'express';
 import { Admin_Category } from '../../../models/category.js';
 import { update_category_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
-import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
+import {
+  upload_to_cloudinary,
+  extract_multer_files,
+  upload_multiple_to_cloudinary,
+} from '../../../utils/upload_on_cloudinary.js';
 
 export async function update_category(req: Request, res: Response): Promise<void> {
   try {
@@ -38,32 +42,17 @@ export async function update_category(req: Request, res: Response): Promise<void
       category.is_active = is_active;
     }
 
-    // Process new uploaded images if attached
-    const files = req.files as Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
-    if (files) {
-      let file_array: Express.Multer.File[] = [];
-      if (Array.isArray(files)) {
-        file_array = files;
-      } else if (typeof files === 'object') {
-        Object.values(files).forEach((arr) => {
-          file_array.push(...arr);
-        });
-      }
-
-      for (const file of file_array) {
-        const upload_result = await upload_to_cloudinary(
-          file.buffer,
-          `categories/${category.slug}/${file.originalname}`
-        );
-        category.media.push(upload_result);
-      }
-    } else if (req.file) {
-      const upload_result = await upload_to_cloudinary(
-        req.file.buffer,
-        `categories/${category.slug}/${req.file.originalname}`
+    // Process new uploaded file arrays concurrently
+    const { all_files } = extract_multer_files(req);
+    if (all_files.length > 0) {
+      const new_media = await upload_multiple_to_cloudinary(
+        all_files,
+        `admin/categories/${category.slug}/media`
       );
-      category.media.push(upload_result);
+
+      category.media.push(...new_media);
     }
+
 
     await category.save();
 

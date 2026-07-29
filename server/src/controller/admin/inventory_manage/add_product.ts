@@ -3,7 +3,12 @@ import { Admin_Product } from '../../../models/product.js';
 import { Admin_Category } from '../../../models/category.js';
 import { add_product_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
-import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
+import {
+  upload_to_cloudinary,
+  extract_multer_files,
+  upload_multiple_to_cloudinary,
+} from '../../../utils/upload_on_cloudinary.js';
+import { success } from 'zod';
 
 export async function add_product(req: Request, res: Response): Promise<void> {
   try {
@@ -76,8 +81,8 @@ export async function add_product(req: Request, res: Response): Promise<void> {
       parse_result.data.discount_percentage !== undefined
         ? parse_result.data.discount_percentage
         : original_price > 0 && current_price < original_price
-        ? Math.round(((original_price - current_price) / original_price) * 100)
-        : 0;
+          ? Math.round(((original_price - current_price) / original_price) * 100)
+          : 0;
 
     // Stock availability status flag
     let stock_availabilty_flag: 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK' = 'IN_STOCK';
@@ -88,43 +93,54 @@ export async function add_product(req: Request, res: Response): Promise<void> {
     }
 
     let thumbnail_url = '';
-    const media: { public_id: string; secure_url: string; resource_type: string }[] = [];
+    const uploaded_media: { public_id: string; secure_url: string; resource_type: string }[] = [];
 
-    // Process file uploads via Multer
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[];
-    if (files) {
-      if (Array.isArray(files)) {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const upload_res = await upload_to_cloudinary(file.buffer, `products/${slug}/${file.originalname}`);
-          media.push(upload_res);
-          if (i === 0) thumbnail_url = upload_res.secure_url;
-        }
-      } else if (typeof files === 'object') {
-        if (files['thumbnail'] && files['thumbnail'][0]) {
-          const thumb_res = await upload_to_cloudinary(
-            files['thumbnail'][0].buffer,
-            `products/${slug}/thumbnail_${files['thumbnail'][0].originalname}`
-          );
-          thumbnail_url = thumb_res.secure_url;
-          media.push(thumb_res);
-        }
-        if (files['media']) {
-          for (const file of files['media']) {
-            const upload_res = await upload_to_cloudinary(file.buffer, `products/${slug}/${file.originalname}`);
-            media.push(upload_res);
-          }
-        }
+    const { all_files, files_by_field } = extract_multer_files(req);
+
+    const thumbnail_files = files_by_field.get('thumbnail');
+    if (!thumbnail_files) {
+      res.status(400).json({
+        success: false,
+        message: 'please provide thumbnail.',
+      });
+      return;
+    }
+    if (thumbnail_files && thumbnail_files.length > 0) {
+      const thumb_uploads = await upload_multiple_to_cloudinary(
+        thumbnail_files,
+        `admin/products/${slug}/thumbnail`
+      );
+      if (thumb_uploads.length > 0) {
+        thumbnail_url = thumb_uploads[0].secure_url;
+        uploaded_media.push(...thumb_uploads);
       }
-    } else if (req.file) {
-      const upload_res = await upload_to_cloudinary(req.file.buffer, `products/${slug}/${req.file.originalname}`);
-      thumbnail_url = upload_res.secure_url;
-      media.push(upload_res);
     }
 
+    const media_files = all_files.filter((f) => f.fieldname !== 'thumbnail');
+
+    if (!all_files.length) {
+      res.status(400).json({
+        success: false,
+        message: 'No files uploaded.',
+      });
+      return;
+    }
+
+    if (media_files.length > 0) {
+      const gallery_uploads = await upload_multiple_to_cloudinary(
+        media_files,
+        `${process.env.STORE_NAME}/admin/products/${slug}/media`
+      );
+      uploaded_media.push(...gallery_uploads);
+    }
+
+    if (!thumbnail_url && uploaded_media.length > 0) {
+      thumbnail_url = uploaded_media[0].secure_url;
+    }
     if (!thumbnail_url) {
       thumbnail_url = 'https://via.placeholder.com/300x300.png?text=Product';
     }
+
 
     const product = new Admin_Product({
       name,
@@ -139,7 +155,7 @@ export async function add_product(req: Request, res: Response): Promise<void> {
       is_it_featured: is_it_featured || false,
       category_id,
       brand,
-      media,
+      media: uploaded_media,
       thumbnail: thumbnail_url,
       highlights,
       specifications,

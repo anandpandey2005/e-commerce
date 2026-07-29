@@ -10,7 +10,7 @@ export const mongo_id_schema = z
 
 export const add_category_schema = z.object({
   name: z.string().trim().min(2, 'Category name must be at least 2 characters.'),
-  description: z.string().trim().optional().default(''),
+  description: z.string().trim().max(200, "cahracter limit reached. : 200"),
 });
 
 export const update_category_schema = z.object({
@@ -54,9 +54,9 @@ export const add_product_schema = z.object({
   is_in_stock: z.boolean().optional(),
   is_it_featured: z.boolean().optional(),
   is_active: z.boolean().optional(),
-  highlights: z.array(product_highlight_schema).optional().default([]),
-  specifications: z.array(product_spec_schema).optional().default([]),
-  faqs: z.array(product_faq_schema).optional().default([]),
+  highlights: z.array(product_highlight_schema),
+  specifications: z.array(product_spec_schema),
+  faqs: z.array(product_faq_schema),
 });
 
 export const update_product_schema = z.object({
@@ -81,3 +81,17 @@ export const update_product_schema = z.object({
 export const export_inventory_schema = z.object({
   format: z.enum(['json', 'csv', 'excel']).optional().default('json'),
 });
+
+export const delete_record_schema = z.object({
+  _id: mongo_id_schema,
+});
+
+export const get_products_query_schema = z.object({
+  search: z.string().trim().optional(),
+  category_id: z.string().trim().optional(),
+  stock_flag: z.enum(['IN_STOCK', 'OUT_OF_STOCK', 'LOW_STOCK']).optional(),
+  is_active: z.enum(['true', 'false']).optional(),
+  page: z.string().optional(),
+  limit: z.string().optional(),
+});
+

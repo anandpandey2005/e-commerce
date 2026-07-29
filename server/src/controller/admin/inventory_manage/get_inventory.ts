@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
 import { Admin_Product } from '../../../models/product.js';
 import { Admin_Category } from '../../../models/category.js';
+import { get_products_query_schema, mongo_id_schema } from '../../../validations/catalog.js';
 
 /**
  * Controller to fetch all categories with product count
  */
 export async function get_categories(_req: Request, res: Response): Promise<void> {
   try {
-    const categories = await Admin_Category.find().sort({ createdAt: -1 });
+    const categories = await Admin_Category.find().sort({ createdAt: -1 }).lean();
     
     // Compute product count per category
     const category_ids = categories.map((c) => c._id);
@@ -22,7 +23,7 @@ export async function get_categories(_req: Request, res: Response): Promise<void
     });
 
     const result = categories.map((cat) => ({
-      ...cat.toObject(),
+      ...cat,
       productCount: count_map[cat._id.toString()] || 0,
     }));
 
@@ -51,20 +52,34 @@ export async function get_categories(_req: Request, res: Response): Promise<void
  */
 export async function get_products(req: Request, res: Response): Promise<void> {
   try {
-    const { search, category_id, stock_flag, is_active, page = '1', limit = '20' } = req.query;
+    const parse_result = get_products_query_schema.safeParse(req.query);
+
+    if (!parse_result.success) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid query parameters.',
+        errors: parse_result.error.flatten().fieldErrors,
+      });
+      return;
+    }
+
+    const { search, category_id, stock_flag, is_active, page = '1', limit = '20' } = parse_result.data;
 
     const query: Record<string, any> = {};
 
-    if (search && typeof search === 'string' && search.trim()) {
-      const regex = new RegExp(search.trim(), 'i');
-      query.$or = [{ name: regex }, { sku: regex }, { brand: regex }];
+    if (search && search.trim()) {
+      const term = search.trim();
+      query.$or = [
+        { $text: { $search: term } },
+        { sku: new RegExp(`^${term}`, 'i') },
+      ];
     }
 
-    if (category_id && typeof category_id === 'string' && category_id !== 'all') {
+    if (category_id && category_id !== 'all') {
       query.category_id = category_id;
     }
 
-    if (stock_flag && typeof stock_flag === 'string') {
+    if (stock_flag) {
       query.stock_availabilty_flag = stock_flag;
     }
 
@@ -72,16 +87,20 @@ export async function get_products(req: Request, res: Response): Promise<void> {
       query.is_active = is_active === 'true';
     }
 
-    const page_num = Math.max(1, parseInt(page as string, 10) || 1);
-    const limit_num = Math.max(1, Math.min(100, parseInt(limit as string, 10) || 20));
+    const page_num = Math.max(1, parseInt(page, 10) || 1);
+    const limit_num = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
     const skip = (page_num - 1) * limit_num;
 
-    const total = await Admin_Product.countDocuments(query);
-    const products = await Admin_Product.find(query)
-      .populate('category_id', 'name slug')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit_num);
+    const [total, products] = await Promise.all([
+      Admin_Product.countDocuments(query),
+      Admin_Product.find(query)
+        .select('name slug description original_price current_price discount_percentage sku stock is_in_stock is_it_featured category_id brand thumbnail stock_availabilty_flag is_active createdAt')
+        .populate('category_id', 'name slug')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit_num)
+        .lean(),
+    ]);
 
     res.status(200).json({
       success: true,
@@ -117,7 +136,20 @@ export async function get_products(req: Request, res: Response): Promise<void> {
 export async function get_product_by_id(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const product = await Admin_Product.findById(id).populate('category_id', 'name slug description');
+    const parse_id = mongo_id_schema.safeParse(id);
+
+    if (!parse_id.success) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid product ID format.',
+      });
+      return;
+    }
+
+    const product = await Admin_Product.findById(parse_id.data)
+      .populate('category_id', 'name slug description')
+      .lean();
+
 
     if (!product) {
       res.status(404).json({
@@ -146,3 +178,4 @@ export async function get_product_by_id(req: Request, res: Response): Promise<vo
     });
   }
 }
+

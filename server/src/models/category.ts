@@ -25,6 +25,8 @@ const CategorySchema = new Schema<ICategory>(
   { timestamps: true }
 );
 
+CategorySchema.index({ is_active: 1, createdAt: -1 });
+
 export const Admin_Category = admin_db.model<ICategory>('Category', CategorySchema);
 export const User_Category = user_db.model<ICategory>('Category', CategorySchema);
 export const Category = Admin_Category;

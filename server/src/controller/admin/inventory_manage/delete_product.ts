@@ -1,28 +1,22 @@
-import { Request, Response } from "express";
-import { Types } from "mongoose";
-import z from "zod";
-import { Admin_Product } from "../../../models/product.js";
-
-const validate_data = z.object({
-    _id: z.string().refine((val) => Types.ObjectId.isValid(val), {
-        message: "Invalid ObjectId format",
-    }),
-});
+import { Request, Response } from 'express';
+import { Admin_Product } from '../../../models/product.js';
+import { delete_record_schema } from '../../../validations/catalog.js';
 
 export async function delete_product(req: Request, res: Response): Promise<void> {
-    try {
-        const validated_data = validate_data.safeParse(req.body);
+  try {
+    const parse_result = delete_record_schema.safeParse(req.body);
 
-        if (!validated_data.success) {
-            res.status(400).json({
-                success: false,
-                message: "Validation failed.",
-                errors: validated_data.error.issues,
-            });
-            return;
-        }
+    if (!parse_result.success) {
+      res.status(400).json({
+        success: false,
+        message: 'Validation failed.',
+        errors: parse_result.error.flatten().fieldErrors,
+      });
+      return;
+    }
 
-        const id = validated_data.data._id;
+    const id = parse_result.data._id;
+
 
         const result = await Admin_Product.findByIdAndDelete(id);
 

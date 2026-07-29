@@ -69,22 +69,22 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
     const products_created: string[] = [];
     const errors: string[] = [];
 
-    // 1. Process explicit categories if included
+    // 1. Pre-process explicit categories if included
     if (import_data.categories && Array.isArray(import_data.categories)) {
       for (const cat_item of import_data.categories) {
         try {
           if (!cat_item.name) continue;
           const slug = generate_slug(cat_item.name);
-          let existing = await Admin_Category.findOne({ slug });
+          let existing = await Admin_Category.findOne({ slug }).lean();
           if (!existing) {
-            existing = new Admin_Category({
+            const new_cat = new Admin_Category({
               name: cat_item.name,
               slug,
               description: cat_item.description || '',
               media: cat_item.media || [],
               is_active: true,
             });
-            await existing.save();
+            await new_cat.save();
             categories_created.push(cat_item.name);
           }
         } catch (cat_err: any) {
@@ -93,7 +93,40 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
       }
     }
 
-    // 2. Process products
+    // Pre-fetch all categories into memory map for O(1) fast lookup
+    const all_categories = await Admin_Category.find({}).select('_id name slug').lean();
+    const cat_by_id_map = new Map<string, any>();
+    const cat_by_slug_map = new Map<string, any>();
+    all_categories.forEach((cat) => {
+      cat_by_id_map.set(cat._id.toString(), cat);
+      cat_by_slug_map.set(cat.slug, cat);
+    });
+
+    // Ensure fallback uncategorized category exists
+    let default_cat = cat_by_slug_map.get('uncategorized');
+    if (!default_cat) {
+      const created_default = new Admin_Category({
+        name: 'Uncategorized',
+        slug: 'uncategorized',
+        description: 'Default category for imported products',
+        is_active: true,
+      });
+      await created_default.save();
+      default_cat = created_default.toObject();
+      cat_by_slug_map.set('uncategorized', default_cat);
+    }
+
+    // 2. Batch check existing SKUs across the dataset
+    const import_skus = import_data.products.map((p) => p.sku).filter(Boolean);
+    const existing_db_products = await Admin_Product.find({ sku: { $in: import_skus } })
+      .select('sku')
+      .lean();
+    const existing_sku_set = new Set(existing_db_products.map((p) => p.sku));
+
+    // Prepare BulkWrite operations
+    const bulk_ops: any[] = [];
+    const current_timestamp = new Date();
+
     for (const prod_item of import_data.products) {
       try {
         if (!prod_item.name || !prod_item.sku) {
@@ -101,50 +134,40 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
           continue;
         }
 
-        const product_slug = generate_slug(prod_item.name);
-
-        // Check if SKU already exists
-        const existing_product = await Admin_Product.findOne({ sku: prod_item.sku });
-        if (existing_product) {
+        if (existing_sku_set.has(prod_item.sku)) {
           errors.push(`Product with SKU '${prod_item.sku}' already exists. Skipping.`);
           continue;
         }
 
-        // Find or Auto-Create Category if it does not exist
-        let category_doc = null;
-        if (prod_item.category_id) {
-          category_doc = await Admin_Category.findById(prod_item.category_id);
-        }
+        // Add to SKU set to avoid duplicates within the payload itself
+        existing_sku_set.add(prod_item.sku);
 
-        if (!category_doc && prod_item.category_name) {
+        const product_slug = generate_slug(prod_item.name);
+
+        // Find or auto-create category
+        let category_doc: any = null;
+        if (prod_item.category_id && cat_by_id_map.has(prod_item.category_id)) {
+          category_doc = cat_by_id_map.get(prod_item.category_id);
+        } else if (prod_item.category_name) {
           const cat_slug = generate_slug(prod_item.category_name);
-          category_doc = await Admin_Category.findOne({ slug: cat_slug });
+          category_doc = cat_by_slug_map.get(cat_slug);
 
-          // Auto-create category if missing
           if (!category_doc) {
-            category_doc = new Admin_Category({
+            const new_c = new Admin_Category({
               name: prod_item.category_name,
               slug: cat_slug,
               description: `Auto-created category for ${prod_item.category_name}`,
               is_active: true,
             });
-            await category_doc.save();
+            await new_c.save();
+            category_doc = new_c.toObject();
+            cat_by_slug_map.set(cat_slug, category_doc);
+            cat_by_id_map.set(category_doc._id.toString(), category_doc);
             categories_created.push(prod_item.category_name);
           }
         }
 
         if (!category_doc) {
-          // Default fallback category if none provided
-          let default_cat = await Admin_Category.findOne({ slug: 'uncategorized' });
-          if (!default_cat) {
-            default_cat = new Admin_Category({
-              name: 'Uncategorized',
-              slug: 'uncategorized',
-              description: 'Default category for imported products',
-              is_active: true,
-            });
-            await default_cat.save();
-          }
           category_doc = default_cat;
         }
 
@@ -162,33 +185,50 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
         if (stock === 0) stock_flag = 'OUT_OF_STOCK';
         else if (stock <= 5) stock_flag = 'LOW_STOCK';
 
-        const product = new Admin_Product({
-          name: prod_item.name,
-          slug: product_slug,
-          description: prod_item.description || prod_item.name,
-          original_price: orig_price,
-          current_price: curr_price,
-          discount_percentage: discount,
-          sku: prod_item.sku,
-          stock,
-          is_in_stock: stock > 0,
-          category_id: category_doc._id,
-          brand: prod_item.brand || 'Generic',
-          media: prod_item.media || [],
-          thumbnail: prod_item.thumbnail || (prod_item.media && prod_item.media[0] ? prod_item.media[0].secure_url : 'https://via.placeholder.com/300x300.png?text=Product'),
-          highlights: prod_item.highlights || [],
-          specifications: prod_item.specifications || [],
-          faqs: prod_item.faqs || [],
-          stock_availabilty_flag: stock_flag,
-          is_active: true,
+        bulk_ops.push({
+          insertOne: {
+            document: {
+              name: prod_item.name,
+              slug: product_slug,
+              description: prod_item.description || prod_item.name,
+              original_price: orig_price,
+              current_price: curr_price,
+              discount_percentage: discount,
+              sku: prod_item.sku,
+              stock,
+              is_in_stock: stock > 0,
+              category_id: category_doc._id,
+              brand: prod_item.brand || 'Generic',
+              media: prod_item.media || [],
+              thumbnail:
+                prod_item.thumbnail ||
+                (prod_item.media && prod_item.media[0]
+                  ? prod_item.media[0].secure_url
+                  : 'https://via.placeholder.com/300x300.png?text=Product'),
+              highlights: prod_item.highlights || [],
+              specifications: prod_item.specifications || [],
+              faqs: prod_item.faqs || [],
+              stock_availabilty_flag: stock_flag,
+              is_active: true,
+              createdAt: current_timestamp,
+              updatedAt: current_timestamp,
+            },
+          },
         });
 
-        await product.save();
         products_created.push(prod_item.name);
       } catch (prod_err: any) {
-        errors.push(`Failed to import product '${prod_item.name}': ${prod_err.message}`);
+        errors.push(`Failed to prepare product '${prod_item.name}': ${prod_err.message}`);
       }
     }
+
+    // Execute bulkWrite in chunks of 500 for maximum database performance
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < bulk_ops.length; i += CHUNK_SIZE) {
+      const chunk = bulk_ops.slice(i, i + CHUNK_SIZE);
+      await Admin_Product.bulkWrite(chunk, { ordered: false });
+    }
+
 
     // 3. Send Notification Email
     const admin_email = (req as any).user?.email || 'anandpandey20005@gmail.com';

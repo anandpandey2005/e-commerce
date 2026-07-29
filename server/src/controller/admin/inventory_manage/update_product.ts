@@ -3,7 +3,11 @@ import { Admin_Product } from '../../../models/product.js';
 import { Admin_Category } from '../../../models/category.js';
 import { update_product_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
-import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
+import {
+  upload_to_cloudinary,
+  extract_multer_files,
+  upload_multiple_to_cloudinary,
+} from '../../../utils/upload_on_cloudinary.js';
 
 export async function update_product(req: Request, res: Response): Promise<void> {
   try {
@@ -12,6 +16,15 @@ export async function update_product(req: Request, res: Response): Promise<void>
     if (typeof body_data.current_price === 'string') body_data.current_price = Number(body_data.current_price);
     if (typeof body_data.stock === 'string') body_data.stock = Number(body_data.stock);
     if (typeof body_data.discount_percentage === 'string') body_data.discount_percentage = Number(body_data.discount_percentage);
+    if (typeof body_data.highlights === 'string') {
+      try { body_data.highlights = JSON.parse(body_data.highlights); } catch {}
+    }
+    if (typeof body_data.specifications === 'string') {
+      try { body_data.specifications = JSON.parse(body_data.specifications); } catch {}
+    }
+    if (typeof body_data.faqs === 'string') {
+      try { body_data.faqs = JSON.parse(body_data.faqs); } catch {}
+    }
 
     const parse_result = update_product_schema.safeParse(body_data);
     if (!parse_result.success) {
@@ -95,16 +108,34 @@ export async function update_product(req: Request, res: Response): Promise<void>
       );
     }
 
-    // Process optional new file uploads
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[];
-    if (files) {
-      if (Array.isArray(files)) {
-        for (const file of files) {
-          const upload_res = await upload_to_cloudinary(file.buffer, `products/${product.slug}/${file.originalname}`);
-          product.media.push(upload_res);
+    // Process file uploads concurrently
+    const { all_files, files_by_field } = extract_multer_files(req);
+    if (all_files.length > 0) {
+      // Check if thumbnail file was updated
+      const thumbnail_files = files_by_field.get('thumbnail');
+      if (thumbnail_files && thumbnail_files.length > 0) {
+        const thumb_uploads = await upload_multiple_to_cloudinary(
+          thumbnail_files,
+          `admin/products/${product.slug}/thumbnail`
+        );
+        if (thumb_uploads.length > 0) {
+          product.thumbnail = thumb_uploads[0].secure_url;
+          product.media.push(...thumb_uploads);
         }
       }
+
+      // Upload remaining media / gallery files
+      const media_files = all_files.filter((f) => f.fieldname !== 'thumbnail');
+      if (media_files.length > 0) {
+        const gallery_uploads = await upload_multiple_to_cloudinary(
+          media_files,
+          `admin/products/${product.slug}/media`
+        );
+        product.media.push(...gallery_uploads);
+      }
     }
+
+
 
     await product.save();
 
