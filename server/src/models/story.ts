@@ -1,5 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import { IStory } from './types/story.js';
+import { admin_db, user_db } from '../config/db.js';
 
 const StorySchema = new Schema<IStory>(
   {
@@ -16,4 +17,6 @@ const StorySchema = new Schema<IStory>(
   { timestamps: true }
 );
 
-export const Story = mongoose.model<IStory>('Story', StorySchema);
+export const Admin_Story = admin_db.model<IStory>('Story', StorySchema);
+export const User_Story = user_db.model<IStory>('Story', StorySchema);
+export const Story = Admin_Story;

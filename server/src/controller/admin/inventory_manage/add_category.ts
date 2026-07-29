@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Category } from '../../../models/category.js';
+import { Admin_Category } from '../../../models/category.js';
 import { add_category_schema } from '../../../validations/catalog.js';
 import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
 
@@ -27,7 +27,7 @@ export async function add_category(req: Request, res: Response): Promise<void> {
     const { name, description } = parse_result.data;
     const slug = generate_slug(name);
 
-    const existing_category = await Category.findOne({ slug });
+    const existing_category = await Admin_Category.findOne({ slug });
     if (existing_category) {
       res.status(400).json({
         success: false,
@@ -65,7 +65,7 @@ export async function add_category(req: Request, res: Response): Promise<void> {
       media.push(upload_result);
     }
 
-    const category = new Category({
+    const category = new Admin_Category({
       name,
       slug,
       description,

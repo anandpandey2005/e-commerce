@@ -1,10 +1,11 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import {
   IProduct,
   IProductHighlight,
   IProductSpecification,
   IProductFAQ,
 } from './types/catalog.js';
+import { admin_db, user_db } from '../config/db.js';
 
 const ProductHighlightSchema = new Schema<IProductHighlight>(
   {
@@ -91,4 +92,6 @@ const ProductSchema = new Schema<IProduct>(
   { timestamps: true }
 );
 
-export const Product = mongoose.model<IProduct>('Product', ProductSchema);
+export const Admin_Product = admin_db.model<IProduct>('Product', ProductSchema);
+export const User_Product = user_db.model<IProduct>('Product', ProductSchema);
+export const Product = Admin_Product;

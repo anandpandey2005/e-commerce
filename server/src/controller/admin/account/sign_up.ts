@@ -1,25 +1,23 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import z from 'zod';
-import { User } from '../../../models/user.js';
+import { Admin_User } from '../../../models/user.js';
 import { generate_tokens, set_token_cookies } from '../../../utils/token.js';
 
 const admin_sign_up_schema = z.object({
   full_name: z.string().trim().min(2).max(50),
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(12),
-  phone: z
-    .object({
-      country_code: z.string().default('+91'),
-      number: z.string()
-    })
-
+  phone: z.object({
+    country_code: z.string().default('+91'),
+    number: z.string(),
+  }),
 });
 
 export async function sign_up(req: Request, res: Response): Promise<void> {
   try {
     // 1. Single-Admin Constraint: Check if an Admin account already exists
-    const existing_admin = await User.findOne({
+    const existing_admin = await Admin_User.findOne({
       role: { $in: ['admin', 'owner'] },
       is_deleted: false,
     });
@@ -44,8 +42,8 @@ export async function sign_up(req: Request, res: Response): Promise<void> {
 
     const { full_name, email, password, phone } = parse_result.data;
 
-    // Check if email already registered under user role
-    const existing_user = await User.findOne({ email, is_deleted: false });
+    // Check if email already registered
+    const existing_user = await Admin_User.findOne({ email, is_deleted: false });
     if (existing_user) {
       res.status(400).json({
         success: false,
@@ -56,7 +54,7 @@ export async function sign_up(req: Request, res: Response): Promise<void> {
 
     const hashed_password = await bcrypt.hash(password, 10);
 
-    const admin_user = new User({
+    const admin_user = new Admin_User({
       full_name,
       email,
       password: hashed_password,

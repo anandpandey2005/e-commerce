@@ -1,30 +1,30 @@
 import { Request, Response } from 'express';
 import { Model, Types } from 'mongoose';
 import z from 'zod';
-import { Product } from '../../models/product.js';
-import { Category } from '../../models/category.js';
-import { User } from '../../models/user.js';
-import { Story } from '../../models/story.js';
+import { Admin_Product } from '../../models/product.js';
+import { Admin_Category } from '../../models/category.js';
+import { Admin_User } from '../../models/user.js';
+import { Admin_Story } from '../../models/story.js';
 
 // Safe registry of allowed models and their toggleable boolean fields
 const MODEL_REGISTRY: Record<string, { model: Model<any>; allowed_fields: string[]; default_field: string }> = {
   product: {
-    model: Product,
+    model: Admin_Product,
     allowed_fields: ['is_active', 'is_in_stock', 'is_it_featured'],
     default_field: 'is_active',
   },
   category: {
-    model: Category,
+    model: Admin_Category,
     allowed_fields: ['is_active'],
     default_field: 'is_active',
   },
   user: {
-    model: User,
+    model: Admin_User,
     allowed_fields: ['archived', 'is_deleted', 'is_email_verified', 'is_phone_verified'],
     default_field: 'archived',
   },
   story: {
-    model: Story,
+    model: Admin_Story,
     allowed_fields: ['is_active'],
     default_field: 'is_active',
   },

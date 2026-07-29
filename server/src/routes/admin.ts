@@ -19,8 +19,7 @@ import { delete_product } from '../controller/admin/inventory_manage/delete_prod
 import { bulk_import } from '../controller/admin/inventory_manage/bulk_import.js';
 import { export_inventory } from '../controller/admin/inventory_manage/export_inventory.js';
 import { toggle_active } from '../controller/admin/inventory_manage/toggle_active_status.js';
-import { toggle_status } from '../controller/common/toggle_status.js';
-import { delete_records } from '../controller/common/delete_records.js';
+import { get_categories, get_products, get_product_by_id } from '../controller/admin/inventory_manage/get_inventory.js';
 
 const router = Router();
 
@@ -101,11 +100,8 @@ router.patch(
   toggle_active
 );
 
-router.delete(
-  '/inventory/delete-records',
-  authenticate_user,
-  is_admin,
-  delete_records
-);
+router.get('/inventory/categories', authenticate_user, is_admin, get_categories);
+router.get('/inventory/products', authenticate_user, is_admin, get_products);
+router.get('/inventory/product/:id', authenticate_user, is_admin, get_product_by_id);
 
 export default router;

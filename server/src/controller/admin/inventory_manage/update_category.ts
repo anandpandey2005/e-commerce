@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Category } from '../../../models/category.js';
+import { Admin_Category } from '../../../models/category.js';
 import { update_category_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
 import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
@@ -18,7 +18,7 @@ export async function update_category(req: Request, res: Response): Promise<void
 
     const { _id, name, description, is_active } = parse_result.data;
 
-    const category = await Category.findById(_id);
+    const category = await Admin_Category.findById(_id);
     if (!category) {
       res.status(404).json({
         success: false,

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Product } from '../../../models/product.js';
-import { Category } from '../../../models/category.js';
+import { Admin_Product } from '../../../models/product.js';
+import { Admin_Category } from '../../../models/category.js';
 import { update_product_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
 import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
@@ -42,7 +42,7 @@ export async function update_product(req: Request, res: Response): Promise<void>
       faqs,
     } = parse_result.data;
 
-    const product = await Product.findById(_id);
+    const product = await Admin_Product.findById(_id);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -52,7 +52,7 @@ export async function update_product(req: Request, res: Response): Promise<void>
     }
 
     if (category_id !== undefined) {
-      const category = await Category.findById(category_id);
+      const category = await Admin_Category.findById(category_id);
       if (!category) {
         res.status(404).json({
           success: false,

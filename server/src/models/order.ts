@@ -1,5 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import { IOrder, IOrderItem, IAddress } from './types/user.js';
+import { admin_db, user_db } from '../config/db.js';
 
 const OrderItemSchema = new Schema<IOrderItem>(
   {
@@ -22,7 +23,7 @@ const AddressSchema = new Schema<IAddress>(
     state: { type: String, lowercase: true, trim: true, required: true },
     pincode: { type: String, trim: true, required: true },
     country: { type: String, lowercase: true, trim: true, required: true },
-    isDefault: { type: Boolean, default: false },
+    is_default: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -72,4 +73,6 @@ const OrderSchema = new Schema<IOrder>(
   { timestamps: true }
 );
 
-export const Order = mongoose.model<IOrder>('Order', OrderSchema);
+export const Admin_Order = admin_db.model<IOrder>('Order', OrderSchema);
+export const User_Order = user_db.model<IOrder>('Order', OrderSchema);
+export const Order = User_Order;

@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../../../middleware/auth.js';
-import { User } from '../../../models/user.js';
+import { Admin_User } from '../../../models/user.js';
 import { clear_token_cookies } from '../../../utils/token.js';
 
 export async function logout(
@@ -9,7 +9,7 @@ export async function logout(
 ): Promise<void> {
   try {
     if (req.user) {
-      await User.updateOne({ _id: req.user._id }, { $unset: { refresh_token: 1 } });
+      await Admin_User.updateOne({ _id: req.user._id }, { $unset: { refresh_token: 1 } });
     }
 
     clear_token_cookies(res);

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/user.js';
+import { User_User } from '../models/user.js';
 import { IUser } from '../models/types/user.js';
 
 export interface AuthenticatedRequest extends Request {
@@ -38,7 +38,7 @@ export async function authenticate_user(
       'default_jwt_access_secret_key';
     const decoded = jwt.verify(token, jwt_secret) as { id: string };
 
-    const user = await User.findOne({ _id: decoded.id, is_deleted: false });
+    const user = await User_User.findOne({ _id: decoded.id, is_deleted: false });
 
     if (!user) {
       res.status(401).json({

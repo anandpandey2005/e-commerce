@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import z from "zod";
-import { Product } from "../../../models/product.js";
+import { Admin_Product } from "../../../models/product.js";
 
 const validate_data = z.object({
     _id: z.string().refine((val) => Types.ObjectId.isValid(val), {
@@ -24,7 +24,7 @@ export async function delete_product(req: Request, res: Response): Promise<void>
 
         const id = validated_data.data._id;
 
-        const result = await Product.findByIdAndDelete(id);
+        const result = await Admin_Product.findByIdAndDelete(id);
 
         if (!result) {
             res.status(404).json({

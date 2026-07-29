@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Product } from '../../../models/product.js';
+import { Admin_Product } from '../../../models/product.js';
 import { export_inventory_schema } from '../../../validations/catalog.js';
 
 export async function export_inventory(req: Request, res: Response): Promise<void> {
@@ -17,7 +17,7 @@ export async function export_inventory(req: Request, res: Response): Promise<voi
 
     const requested_format = parse_result.data.format;
 
-    const products = await Product.find({}).populate('category_id', 'name slug').lean();
+    const products = await Admin_Product.find({}).populate('category_id', 'name slug').lean();
 
     const formatted_items = products.map((item: any) => ({
       ID: item._id.toString(),

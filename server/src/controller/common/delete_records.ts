@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
 import { Model, Types } from 'mongoose';
 import z from 'zod';
-import { Product } from '../../models/product.js';
-import { Category } from '../../models/category.js';
-import { User } from '../../models/user.js';
-import { Story } from '../../models/story.js';
+import { Admin_Product } from '../../models/product.js';
+import { Admin_Category } from '../../models/category.js';
+import { Admin_User } from '../../models/user.js';
+import { Admin_Story } from '../../models/story.js';
 
 const MODEL_REGISTRY: Record<string, { model: Model<any>; supports_soft_delete: boolean }> = {
-  product: { model: Product, supports_soft_delete: false },
-  category: { model: Category, supports_soft_delete: false },
-  user: { model: User, supports_soft_delete: true },
-  story: { model: Story, supports_soft_delete: false },
+  product: { model: Admin_Product, supports_soft_delete: false },
+  category: { model: Admin_Category, supports_soft_delete: false },
+  user: { model: Admin_User, supports_soft_delete: true },
+  story: { model: Admin_Story, supports_soft_delete: false },
 };
 
 const id_schema = z.string().refine((val) => Types.ObjectId.isValid(val), {

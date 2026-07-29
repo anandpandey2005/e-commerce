@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Product } from '../../../models/product.js';
-import { Category } from '../../../models/category.js';
+import { Admin_Product } from '../../../models/product.js';
+import { Admin_Category } from '../../../models/category.js';
 import { add_product_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
 import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
@@ -51,7 +51,7 @@ export async function add_product(req: Request, res: Response): Promise<void> {
     } = parse_result.data;
 
     // Verify category exists
-    const category = await Category.findById(category_id);
+    const category = await Admin_Category.findById(category_id);
     if (!category) {
       res.status(404).json({
         success: false,
@@ -62,7 +62,7 @@ export async function add_product(req: Request, res: Response): Promise<void> {
 
     // Generate unique slug & check SKU uniqueness
     const slug = generate_slug(name);
-    const existing_sku = await Product.findOne({ sku });
+    const existing_sku = await Admin_Product.findOne({ sku });
     if (existing_sku) {
       res.status(400).json({
         success: false,
@@ -126,7 +126,7 @@ export async function add_product(req: Request, res: Response): Promise<void> {
       thumbnail_url = 'https://via.placeholder.com/300x300.png?text=Product';
     }
 
-    const product = new Product({
+    const product = new Admin_Product({
       name,
       slug,
       description,

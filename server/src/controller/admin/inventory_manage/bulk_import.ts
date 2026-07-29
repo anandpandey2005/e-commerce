@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { Product } from '../../../models/product.js';
-import { Category } from '../../../models/category.js';
+import { Admin_Product } from '../../../models/product.js';
+import { Admin_Category } from '../../../models/category.js';
 import { generate_slug } from './add_category.js';
-import { upload_to_cloudinary } from '../../../utils/upload_on_cloudinary.js';
 
 interface BulkCategoryImport {
   name: string;
@@ -76,9 +75,9 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
         try {
           if (!cat_item.name) continue;
           const slug = generate_slug(cat_item.name);
-          let existing = await Category.findOne({ slug });
+          let existing = await Admin_Category.findOne({ slug });
           if (!existing) {
-            existing = new Category({
+            existing = new Admin_Category({
               name: cat_item.name,
               slug,
               description: cat_item.description || '',
@@ -105,7 +104,7 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
         const product_slug = generate_slug(prod_item.name);
 
         // Check if SKU already exists
-        const existing_product = await Product.findOne({ sku: prod_item.sku });
+        const existing_product = await Admin_Product.findOne({ sku: prod_item.sku });
         if (existing_product) {
           errors.push(`Product with SKU '${prod_item.sku}' already exists. Skipping.`);
           continue;
@@ -114,16 +113,16 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
         // Find or Auto-Create Category if it does not exist
         let category_doc = null;
         if (prod_item.category_id) {
-          category_doc = await Category.findById(prod_item.category_id);
+          category_doc = await Admin_Category.findById(prod_item.category_id);
         }
 
         if (!category_doc && prod_item.category_name) {
           const cat_slug = generate_slug(prod_item.category_name);
-          category_doc = await Category.findOne({ slug: cat_slug });
+          category_doc = await Admin_Category.findOne({ slug: cat_slug });
 
           // Auto-create category if missing
           if (!category_doc) {
-            category_doc = new Category({
+            category_doc = new Admin_Category({
               name: prod_item.category_name,
               slug: cat_slug,
               description: `Auto-created category for ${prod_item.category_name}`,
@@ -136,9 +135,9 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
 
         if (!category_doc) {
           // Default fallback category if none provided
-          let default_cat = await Category.findOne({ slug: 'uncategorized' });
+          let default_cat = await Admin_Category.findOne({ slug: 'uncategorized' });
           if (!default_cat) {
-            default_cat = new Category({
+            default_cat = new Admin_Category({
               name: 'Uncategorized',
               slug: 'uncategorized',
               description: 'Default category for imported products',
@@ -163,7 +162,7 @@ export async function bulk_import(req: Request, res: Response): Promise<void> {
         if (stock === 0) stock_flag = 'OUT_OF_STOCK';
         else if (stock <= 5) stock_flag = 'LOW_STOCK';
 
-        const product = new Product({
+        const product = new Admin_Product({
           name: prod_item.name,
           slug: product_slug,
           description: prod_item.description || prod_item.name,

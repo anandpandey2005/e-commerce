@@ -1,5 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
+import { Schema } from 'mongoose';
 import { IUser, IAddress, IUserSettings } from './types/user.js';
+import { admin_db, user_db } from '../config/db.js';
 
 const AddressSchema = new Schema<IAddress>({
   tag: { type: String, lowercase: true, trim: true, required: true },
@@ -100,4 +101,6 @@ UserSchema.index(
   { unique: true, partialFilterExpression: { is_deleted: false } }
 );
 
-export const User = mongoose.model<IUser>('User', UserSchema);
+export const Admin_User = admin_db.model<IUser>('User', UserSchema);
+export const User_User = user_db.model<IUser>('User', UserSchema);
+export const User = User_User;

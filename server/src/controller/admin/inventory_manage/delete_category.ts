@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import z from "zod";
-import { Category } from "../../../models/category.js";
+import { Admin_Category } from "../../../models/category.js";
 
 const validate_data = z.object({
     _id: z.string().refine((val) => Types.ObjectId.isValid(val), {
@@ -24,7 +24,7 @@ export async function delete_category(req: Request, res: Response): Promise<void
 
         const id = validated_data.data._id;
 
-        const result = await Category.findByIdAndDelete(id);
+        const result = await Admin_Category.findByIdAndDelete(id);
 
         if (!result) {
             res.status(404).json({

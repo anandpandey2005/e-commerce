@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import z from 'zod';
-import { User } from '../../../models/user.js';
+import { Admin_User } from '../../../models/user.js';
 import { generate_tokens, set_token_cookies } from '../../../utils/token.js';
 
 const admin_sign_in_schema = z.object({
@@ -23,7 +23,7 @@ export async function sign_in(req: Request, res: Response): Promise<void> {
 
     const { email, password } = parse_result.data;
 
-    const admin_user = await User.findOne({
+    const admin_user = await Admin_User.findOne({
       email,
       role: { $in: ['admin', 'owner'] },
       is_deleted: false,
