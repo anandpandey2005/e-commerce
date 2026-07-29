@@ -3,19 +3,25 @@ import { Admin_Category } from '../../../models/category.js';
 import { update_category_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
 import {
-  upload_to_cloudinary,
   extract_multer_files,
   upload_multiple_to_cloudinary,
 } from '../../../utils/upload_on_cloudinary.js';
 
 export async function update_category(req: Request, res: Response): Promise<void> {
   try {
-    const parse_result = update_category_schema.safeParse(req.body);
+    const body_data = { ...req.body };
+    if (typeof body_data.is_active === 'string') body_data.is_active = body_data.is_active === 'true';
+
+    const parse_result = update_category_schema.safeParse(body_data);
     if (!parse_result.success) {
+      const fieldErrors = parse_result.error.flatten().fieldErrors;
+      const errorMessages = Object.entries(fieldErrors)
+        .map(([field, errs]) => `${field}: ${(errs || []).join(', ')}`)
+        .join('; ');
       res.status(400).json({
         success: false,
-        message: 'Validation failed.',
-        errors: parse_result.error.flatten().fieldErrors,
+        message: errorMessages ? `Validation failed: ${errorMessages}` : 'Validation failed.',
+        errors: fieldErrors,
       });
       return;
     }

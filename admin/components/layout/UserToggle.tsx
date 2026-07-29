@@ -1,21 +1,38 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useSearch } from "@/hooks/use-search";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { logoutAdmin } from "@/redux/slices/accountSlice";
 import { CURRENT_USER, MOCK_PRODUCTS, MOCK_CATEGORIES, RECENT_ORDERS_DATA } from "@/lib/constants";
 import { MenuIcon, SearchIcon, CloseIcon } from "@/components/ui/icons";
+import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function UserToggle() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const pathname = usePathname();
+  const { adminUser } = useAppSelector((state) => state.account);
   const { isOpen, toggleSidebar } = useSidebar();
   const { searchQuery, setSearchQuery } = useSearch();
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  const adminDisplayName = adminUser?.full_name || CURRENT_USER.name;
+  const adminInitials = adminDisplayName.slice(0, 2).toUpperCase();
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Are you sure you want to log out of the admin console?")) {
+      dispatch(logoutAdmin());
+      router.replace("/signin");
+    }
+  };
 
   const isInventoryPage = pathname === "/inventory" || pathname === "/products";
   const isEmployeePage = pathname === "/employees";
@@ -178,25 +195,36 @@ export default function UserToggle() {
         >
           {/* User Icon Avatar */}
           <div className="relative shrink-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-[#131313] flex items-center justify-center font-geist font-bold text-xs sm:text-sm shadow-md">
-              {CURRENT_USER.name.slice(0, 2).toUpperCase()}
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 text-black flex items-center justify-center font-geist font-extrabold text-xs sm:text-sm shadow-md">
+              {adminInitials}
             </div>
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400 ring-2 ring-[#131313]" />
           </div>
 
-          {/* Dynamic Active Page Name & User Name */}
+          {/* Dynamic Active Page Name & Admin Name */}
           <div className="flex flex-col text-left pr-1.5">
-            <span className="text-xs sm:text-sm font-hanken font-bold text-white group-hover:text-[#c4c7c8] transition-colors truncate max-w-[130px] sm:max-w-[170px]">
+            <span className="text-xs sm:text-sm font-hanken font-bold text-white group-hover:text-orange-400 transition-colors truncate max-w-[130px] sm:max-w-[170px]">
               {activePageTitle}
             </span>
-            <span className="text-[10px] sm:text-xs font-geist text-[#8e9192] truncate max-w-[130px] sm:max-w-[170px]">
-              {CURRENT_USER.name}
+            <span className="text-[10px] sm:text-xs font-geist text-[#a1a1aa] truncate max-w-[130px] sm:max-w-[170px] capitalize">
+              {adminDisplayName}
             </span>
           </div>
 
-          {/* Menu Icon Indicator */}
-          <div className="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#e2e2e2] group-hover:bg-white group-hover:text-[#131313] transition-all duration-300 shrink-0">
-            <MenuIcon className="w-4.5 h-4.5" />
+          {/* Menu Icon Indicator & Logout Action */}
+          <div className="flex items-center space-x-1.5 shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#e2e2e2] group-hover:bg-white group-hover:text-[#131313] transition-all duration-300">
+              <MenuIcon className="w-4.5 h-4.5" />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Sign Out of Admin"
+              className="w-8 h-8 rounded-full bg-red-500/15 hover:bg-red-500/30 text-red-400 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         </button>
       </div>

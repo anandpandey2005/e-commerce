@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { Admin_Category } from '../../../models/category.js';
 import { add_category_schema } from '../../../validations/catalog.js';
 import {
-  upload_to_cloudinary,
   extract_multer_files,
   upload_multiple_to_cloudinary,
 } from '../../../utils/upload_on_cloudinary.js';
@@ -18,12 +17,16 @@ export function generate_slug(text: string): string {
 
 export async function add_category(req: Request, res: Response): Promise<void> {
   try {
-    const parse_result = add_category_schema.safeParse(req.body);
+    const parse_result = add_category_schema.safeParse(req.body || {});
     if (!parse_result.success) {
+      const fieldErrors = parse_result.error.flatten().fieldErrors;
+      const errorMessages = Object.entries(fieldErrors)
+        .map(([field, errs]) => `${field}: ${(errs || []).join(', ')}`)
+        .join('; ');
       res.status(400).json({
         success: false,
-        message: 'Validation failed.',
-        errors: parse_result.error.flatten().fieldErrors,
+        message: errorMessages ? `Validation failed: ${errorMessages}` : 'Validation failed.',
+        errors: fieldErrors,
       });
       return;
     }

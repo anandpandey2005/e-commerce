@@ -4,7 +4,6 @@ import { Admin_Category } from '../../../models/category.js';
 import { update_product_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
 import {
-  upload_to_cloudinary,
   extract_multer_files,
   upload_multiple_to_cloudinary,
 } from '../../../utils/upload_on_cloudinary.js';
@@ -16,6 +15,11 @@ export async function update_product(req: Request, res: Response): Promise<void>
     if (typeof body_data.current_price === 'string') body_data.current_price = Number(body_data.current_price);
     if (typeof body_data.stock === 'string') body_data.stock = Number(body_data.stock);
     if (typeof body_data.discount_percentage === 'string') body_data.discount_percentage = Number(body_data.discount_percentage);
+
+    if (typeof body_data.is_it_featured === 'string') body_data.is_it_featured = body_data.is_it_featured === 'true';
+    if (typeof body_data.is_active === 'string') body_data.is_active = body_data.is_active === 'true';
+    if (typeof body_data.is_in_stock === 'string') body_data.is_in_stock = body_data.is_in_stock === 'true';
+
     if (typeof body_data.highlights === 'string') {
       try { body_data.highlights = JSON.parse(body_data.highlights); } catch {}
     }
@@ -28,10 +32,14 @@ export async function update_product(req: Request, res: Response): Promise<void>
 
     const parse_result = update_product_schema.safeParse(body_data);
     if (!parse_result.success) {
+      const fieldErrors = parse_result.error.flatten().fieldErrors;
+      const errorMessages = Object.entries(fieldErrors)
+        .map(([field, errs]) => `${field}: ${(errs || []).join(', ')}`)
+        .join('; ');
       res.status(400).json({
         success: false,
-        message: 'Validation failed.',
-        errors: parse_result.error.flatten().fieldErrors,
+        message: errorMessages ? `Validation failed: ${errorMessages}` : 'Validation failed.',
+        errors: fieldErrors,
       });
       return;
     }

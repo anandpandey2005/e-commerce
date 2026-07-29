@@ -94,7 +94,6 @@ export async function get_products(req: Request, res: Response): Promise<void> {
     const [total, products] = await Promise.all([
       Admin_Product.countDocuments(query),
       Admin_Product.find(query)
-        .select('name slug description original_price current_price discount_percentage sku stock is_in_stock is_it_featured category_id brand thumbnail stock_availabilty_flag is_active createdAt')
         .populate('category_id', 'name slug')
         .sort({ createdAt: -1 })
         .skip(skip)

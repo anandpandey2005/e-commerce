@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User_User } from '../models/user.js';
+import { User_User, Admin_User } from '../models/user.js';
 import { IUser } from '../models/types/user.js';
 
 export interface AuthenticatedRequest extends Request {
@@ -36,9 +36,24 @@ export async function authenticate_user(
       process.env.JWT_ACCESS_SECRET ||
       process.env.JWT_SECRET ||
       'default_jwt_access_secret_key';
-    const decoded = jwt.verify(token, jwt_secret) as { id: string };
+    const decoded = jwt.verify(token, jwt_secret) as { id: string; role?: string };
 
-    const user = await User_User.findOne({ _id: decoded.id, is_deleted: false });
+    let user = null;
+    const is_admin_role =
+      decoded.role === 'admin' ||
+      decoded.role === 'owner' ||
+      decoded.role === 'employee' ||
+      decoded.role === 'support';
+
+    if (is_admin_role) {
+      user = await Admin_User.findOne({ _id: decoded.id, is_deleted: false });
+    }
+    if (!user) {
+      user = await User_User.findOne({ _id: decoded.id, is_deleted: false });
+    }
+    if (!user && !is_admin_role) {
+      user = await Admin_User.findOne({ _id: decoded.id, is_deleted: false });
+    }
 
     if (!user) {
       res.status(401).json({

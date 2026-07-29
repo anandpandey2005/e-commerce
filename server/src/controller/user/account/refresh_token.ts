@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { ZodError } from 'zod';
-import { User } from '../../../models/user.js';
+import { User_User, Admin_User } from '../../../models/user.js';
 import { refresh_token_schema } from '../../../validations/user.js';
 import { generate_tokens, set_token_cookies } from '../../../utils/token.js';
 
@@ -10,7 +10,7 @@ export async function refresh_token(
   res: Response
 ): Promise<void> {
   try {
-    const zod_result = refresh_token_schema.safeParse(req?.body);
+    const zod_result = refresh_token_schema.safeParse(req.body || {});
 
     if (!zod_result.success) {
       res.status(400).json({
@@ -47,10 +47,11 @@ export async function refresh_token(
       process.env.JWT_SECRET ||
       'default_jwt_refresh_secret_key';
 
-    let decoded: { id: string };
+    let decoded: { id: string; role?: string };
     try {
       decoded = jwt.verify(input_refresh_token, refresh_secret) as {
         id: string;
+        role?: string;
       };
     } catch {
       res.status(401).json({
@@ -60,10 +61,22 @@ export async function refresh_token(
       return;
     }
 
-    const user = await User.findOne({
-      _id: decoded.id,
-      is_deleted: false,
-    });
+    let user = null;
+    const is_admin_role =
+      decoded.role === 'admin' ||
+      decoded.role === 'owner' ||
+      decoded.role === 'employee' ||
+      decoded.role === 'support';
+
+    if (is_admin_role) {
+      user = await Admin_User.findOne({ _id: decoded.id, is_deleted: false });
+    }
+    if (!user) {
+      user = await User_User.findOne({ _id: decoded.id, is_deleted: false });
+    }
+    if (!user && !is_admin_role) {
+      user = await Admin_User.findOne({ _id: decoded.id, is_deleted: false });
+    }
 
     if (!user) {
       res.status(401).json({

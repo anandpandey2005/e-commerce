@@ -8,6 +8,7 @@ import { sign_up } from '../controller/admin/account/sign_up.js';
 import { sign_in } from '../controller/admin/account/sign_in.js';
 import { logout } from '../controller/admin/account/logout.js';
 import { retrieve_account } from '../controller/admin/account/retrieve_account.js';
+import { refresh_token } from '../controller/user/account/refresh_token.js';
 
 // Inventory Management Controllers
 import { add_category } from '../controller/admin/inventory_manage/add_category.js';
@@ -26,6 +27,8 @@ const router = Router();
 // Public Admin Authentication Routes
 router.post('/account/signup', sign_up);
 router.post('/account/signin', sign_in);
+router.post('/account/refresh-token', refresh_token);
+router.post('/refresh-token', refresh_token);
 
 // Protected Admin Account Routes
 router.post('/account/logout', authenticate_user, is_admin, logout);

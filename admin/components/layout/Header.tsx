@@ -38,7 +38,7 @@ export default function Header() {
 
     const mainEl = document.getElementById("main-content-canvas");
     if (mainEl) {
-      const style = mainEl.style as CSSStyleDeclaration & { zoom?: string };
+      const style = mainEl.style as any;
       style.transition = "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)";
       if ("zoom" in style) {
         style.zoom = `${clampedScale}`;

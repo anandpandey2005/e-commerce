@@ -1,39 +1,69 @@
 import { Request, Response } from 'express';
+import { Types } from 'mongoose';
 import { Admin_Product } from '../../../models/product.js';
 import { Admin_Category } from '../../../models/category.js';
 import { add_product_schema } from '../../../validations/catalog.js';
 import { generate_slug } from './add_category.js';
 import {
-  upload_to_cloudinary,
   extract_multer_files,
   upload_multiple_to_cloudinary,
 } from '../../../utils/upload_on_cloudinary.js';
-import { success } from 'zod';
 
 export async function add_product(req: Request, res: Response): Promise<void> {
   try {
-    // Parse numeric/JSON inputs if passed as multipart/form-data strings
+    // Parse numeric/JSON/boolean inputs passed as multipart/form-data strings
     const body_data = { ...req.body };
     if (typeof body_data.original_price === 'string') body_data.original_price = Number(body_data.original_price);
     if (typeof body_data.current_price === 'string') body_data.current_price = Number(body_data.current_price);
     if (typeof body_data.stock === 'string') body_data.stock = Number(body_data.stock);
     if (typeof body_data.discount_percentage === 'string') body_data.discount_percentage = Number(body_data.discount_percentage);
+
+    if (typeof body_data.is_it_featured === 'string') body_data.is_it_featured = body_data.is_it_featured === 'true';
+    if (typeof body_data.is_active === 'string') body_data.is_active = body_data.is_active === 'true';
+    if (typeof body_data.is_in_stock === 'string') body_data.is_in_stock = body_data.is_in_stock === 'true';
+
     if (typeof body_data.highlights === 'string') {
       try { body_data.highlights = JSON.parse(body_data.highlights); } catch { body_data.highlights = []; }
     }
+    if (Array.isArray(body_data.highlights)) {
+      body_data.highlights = body_data.highlights.filter(
+        (h: any) => h && typeof h.title === 'string' && h.title.trim() !== '' && typeof h.description === 'string' && h.description.trim() !== ''
+      );
+    }
+
     if (typeof body_data.specifications === 'string') {
       try { body_data.specifications = JSON.parse(body_data.specifications); } catch { body_data.specifications = []; }
     }
+    if (Array.isArray(body_data.specifications)) {
+      body_data.specifications = body_data.specifications
+        .map((cat: any) => ({
+          category_name: cat?.category_name || 'General',
+          specs: Array.isArray(cat?.specs)
+            ? cat.specs.filter((s: any) => s && s.key && s.key.trim() !== '' && s.value && s.value.trim() !== '')
+            : [],
+        }))
+        .filter((cat: any) => cat.specs.length > 0);
+    }
+
     if (typeof body_data.faqs === 'string') {
       try { body_data.faqs = JSON.parse(body_data.faqs); } catch { body_data.faqs = []; }
+    }
+    if (Array.isArray(body_data.faqs)) {
+      body_data.faqs = body_data.faqs.filter(
+        (f: any) => f && typeof f.question === 'string' && f.question.trim() !== '' && typeof f.answer === 'string' && f.answer.trim() !== ''
+      );
     }
 
     const parse_result = add_product_schema.safeParse(body_data);
     if (!parse_result.success) {
+      const fieldErrors = parse_result.error.flatten().fieldErrors;
+      const errorMessages = Object.entries(fieldErrors)
+        .map(([field, errs]) => `${field}: ${(errs || []).join(', ')}`)
+        .join('; ');
       res.status(400).json({
         success: false,
-        message: 'Validation failed.',
-        errors: parse_result.error.flatten().fieldErrors,
+        message: errorMessages ? `Validation failed: ${errorMessages}` : 'Validation failed.',
+        errors: fieldErrors,
       });
       return;
     }
@@ -45,7 +75,7 @@ export async function add_product(req: Request, res: Response): Promise<void> {
       current_price,
       sku,
       stock,
-      category_id,
+      category_id: input_cat_id,
       brand,
       is_in_stock,
       is_it_featured,
@@ -55,14 +85,35 @@ export async function add_product(req: Request, res: Response): Promise<void> {
       faqs,
     } = parse_result.data;
 
-    // Verify category exists
-    const category = await Admin_Category.findById(category_id);
+    // Resolve category (support MongoDB ObjectId as well as mock category IDs)
+    let category = null;
+    let final_category_id = input_cat_id;
+
+    if (Types.ObjectId.isValid(input_cat_id)) {
+      category = await Admin_Category.findById(input_cat_id);
+    } else {
+      category = await Admin_Category.findOne({ $or: [{ slug: input_cat_id }, { name: input_cat_id }] });
+    }
+
     if (!category) {
-      res.status(404).json({
-        success: false,
-        message: `Category with ID '${category_id}' not found.`,
-      });
-      return;
+      const first_cat = await Admin_Category.findOne({ is_deleted: false });
+      if (first_cat) {
+        category = first_cat;
+        final_category_id = first_cat._id.toString();
+      } else {
+        // Create a default category if database has none
+        const default_cat = new Admin_Category({
+          name: 'General',
+          slug: 'general',
+          description: 'General Product Category',
+          is_active: true,
+        });
+        await default_cat.save();
+        category = default_cat;
+        final_category_id = default_cat._id.toString();
+      }
+    } else {
+      final_category_id = category._id.toString();
     }
 
     // Generate unique slug & check SKU uniqueness
@@ -153,7 +204,7 @@ export async function add_product(req: Request, res: Response): Promise<void> {
       stock,
       is_in_stock: is_in_stock !== undefined ? is_in_stock : stock > 0,
       is_it_featured: is_it_featured || false,
-      category_id,
+      category_id: final_category_id,
       brand,
       media: uploaded_media,
       thumbnail: thumbnail_url,

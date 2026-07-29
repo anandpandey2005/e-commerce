@@ -3,12 +3,12 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import userRouter from './routes/user.js';
 import adminRouter from './routes/admin.js';
-
+import publicRouter from './routes/public.js';
 const app: Application = express();
 
 app.use(
   cors({
-    origin: '*',
+    origin: true,
     credentials: true,
   })
 );
@@ -25,6 +25,7 @@ app.get('/api/v1/health', (_req: Request, res: Response): void => {
   return;
 });
 
+app.use('/api/v1/public', publicRouter);
 app.use('/api/v1/user/account', userRouter);
 app.use('/api/v1/admin', adminRouter);
 
